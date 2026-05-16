@@ -1,0 +1,81 @@
+import { useMemo, useState } from 'react';
+import { DropzoneUploader } from '../components/DropzoneUploader';
+import { PreviewGrid } from '../components/PreviewGrid';
+import { PdfPreview } from '../components/PdfPreview';
+import { BookletSettings } from '../types/booklet';
+import { buildSheetSpreads } from '../utils/imposition';
+import { generateBookletPdf, loadPdf } from '../utils/pdf';
+
+const defaults: BookletSettings = {
+  paperSize: 'A4',
+  bookletSize: 'A5',
+  printMode: 'duplex',
+  duplexFlip: 'short',
+  margins: { inner: 8, outer: 8, top: 8, bottom: 8 },
+  gutter: 3,
+  signatures: 1,
+  rtl: false
+};
+
+export const BookletPage = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [pageCount, setPageCount] = useState(0);
+  const [settings, setSettings] = useState<BookletSettings>(defaults);
+  const [loading, setLoading] = useState(false);
+
+  const spreads = useMemo(() => buildSheetSpreads(pageCount, settings), [pageCount, settings]);
+
+  const onFile = async (f: File) => {
+    setFile(f);
+    const pdf = await loadPdf(f);
+    setPageCount(pdf.getPageCount());
+  };
+
+  const create = async () => {
+    if (!file) return;
+    setLoading(true);
+    try {
+      const bytes = await generateBookletPdf(file, settings);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${file.name.replace(/\.pdf$/i, '')}-booklet.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="mx-auto max-w-6xl p-4 md:p-8">
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4">
+          <DropzoneUploader onFile={onFile} />
+          <PdfPreview file={file} />
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <label className="mb-2 block text-sm">Paper Size</label>
+            <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.paperSize} onChange={(e) => setSettings((s) => ({ ...s, paperSize: e.target.value as BookletSettings['paperSize'] }))}>
+              <option>A4</option><option>Letter</option>
+            </select>
+            <label className="mb-2 mt-3 block text-sm">Print mode</label>
+            <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.printMode} onChange={(e) => setSettings((s) => ({ ...s, printMode: e.target.value as BookletSettings['printMode'] }))}>
+              <option value="duplex">Double-sided</option><option value="single">Single-sided</option>
+            </select>
+            <button disabled={!file || loading} onClick={create} className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900">
+              {loading ? 'Generating…' : 'Generate booklet PDF'}
+            </button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-sm text-slate-500">Input pages: {pageCount} · Output sheets: {Math.ceil(pageCount / 4)}</div>
+            <div className="mt-2 text-sm">Print instructions: 1) Print {settings.printMode === 'duplex' ? 'double-sided' : 'single-sided'} 2) Flip on {settings.duplexFlip} edge 3) Fold in center</div>
+          </div>
+          <PreviewGrid spreads={spreads} />
+        </div>
+      </div>
+    </main>
+  );
+};
