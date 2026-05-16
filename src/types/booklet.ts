@@ -1,0 +1,33 @@
+export type PaperSize = 'A4' | 'Letter';
+export type BookletSize = 'A5' | 'A6';
+export type PrintMode = 'duplex' | 'single';
+export type DuplexFlip = 'long' | 'short';
+
+export interface MarginSettings {
+  inner: number;
+  outer: number;
+  top: number;
+  bottom: number;
+}
+
+export interface BookletSettings {
+  paperSize: PaperSize;
+  bookletSize: BookletSize;
+  printMode: PrintMode;
+  duplexFlip: DuplexFlip;
+  margins: MarginSettings;
+  gutter: number;
+  signatures: number;
+  rtl: boolean;
+}
+
+export interface ImposedCell {
+  pageNumber: number | null;
+  isBlank: boolean;
+}
+
+export interface SheetSpread {
+  front: [ImposedCell, ImposedCell];
+  back: [ImposedCell, ImposedCell] | null;
+  sheetIndex: number;
+}
