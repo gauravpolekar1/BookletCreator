@@ -1,11 +1,37 @@
-import { PDFDocument, degrees } from 'pdf-lib';
+import { PDFDocument, PDFPage } from 'pdf-lib';
 import { BookletSettings } from '../types/booklet';
-import { getPaperDimensions, mmToPt } from './layout';
+import { getPaperDimensions, getSlotsPerSheet, mmToPt } from './layout';
 import { buildSheetSpreads } from './imposition';
+
+interface Slot {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
 export const loadPdf = async (file: File): Promise<PDFDocument> => {
   const bytes = await file.arrayBuffer();
   return PDFDocument.load(bytes);
+};
+
+const getSlots = (paperW: number, paperH: number, slotsPerSheet: 2 | 4): Slot[] => {
+  if (slotsPerSheet === 2) {
+    const slotW = paperW / 2;
+    return [
+      { x: 0, y: 0, w: slotW, h: paperH },
+      { x: slotW, y: 0, w: slotW, h: paperH }
+    ];
+  }
+
+  const slotW = paperW / 2;
+  const slotH = paperH / 2;
+  return [
+    { x: 0, y: slotH, w: slotW, h: slotH },
+    { x: slotW, y: slotH, w: slotW, h: slotH },
+    { x: 0, y: 0, w: slotW, h: slotH },
+    { x: slotW, y: 0, w: slotW, h: slotH }
+  ];
 };
 
 export const generateBookletPdf = async (file: File, settings: BookletSettings): Promise<Uint8Array> => {
@@ -16,51 +42,62 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
   const pages = src.getPages();
   const spreads = buildSheetSpreads(pages.length, settings);
   const [paperW, paperH] = getPaperDimensions(settings.paperSize);
-  const slotW = paperW / 2;
-  const slotH = paperH;
+  const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
 
-  const map = await out.embedPages(pages);
+  const embeddedPages = await out.embedPages(pages);
 
-  const drawSlot = (sheet: import('pdf-lib').PDFPage, pageNum: number | null, x: number) => {
+  const drawSlot = (sheet: PDFPage, pageNum: number | null, slot: Slot) => {
     if (pageNum === null) return;
+
     const pageIndex = pageNum - 1;
-    const embed = map[pageIndex];
-    const srcPage = pages[pageIndex];
-    const { width, height } = embed;
-    const rot = srcPage.getRotation().angle;
-    const adjustedWidth = rot === 90 || rot === 270 ? height : width;
-    const adjustedHeight = rot === 90 || rot === 270 ? width : height;
+    const embed = embeddedPages[pageIndex];
 
-    const contentW = slotW - mmToPt(settings.margins.inner + settings.margins.outer + settings.gutter);
-    const contentH = slotH - mmToPt(settings.margins.top + settings.margins.bottom);
+    const marginX = mmToPt(settings.margins.inner + settings.margins.outer + settings.gutter) / 2;
+    const marginY = mmToPt(settings.margins.top + settings.margins.bottom) / 2;
+    const contentW = Math.max(0, slot.w - marginX * 2);
+    const contentH = Math.max(0, slot.h - marginY * 2);
 
-    const scale = Math.min(contentW / adjustedWidth, contentH / adjustedHeight);
+    const normalScale = Math.min(contentW / embed.width, contentH / embed.height);
+    const rotatedScale = Math.min(contentW / embed.height, contentH / embed.width);
+    const rotateForBestFit = rotatedScale > normalScale;
 
-    const drawW = adjustedWidth * scale;
-    const drawH = adjustedHeight * scale;
-    const offsetX = x + (slotW - drawW) / 2;
-    const offsetY = (slotH - drawH) / 2;
+    const drawW = (rotateForBestFit ? embed.height : embed.width) * (rotateForBestFit ? rotatedScale : normalScale);
+    const drawH = (rotateForBestFit ? embed.width : embed.height) * (rotateForBestFit ? rotatedScale : normalScale);
+
+    const x = slot.x + (slot.w - drawW) / 2;
+    const y = slot.y + (slot.h - drawH) / 2;
 
     sheet.drawPage(embed, {
-      x: offsetX,
-      y: offsetY,
-      xScale: scale,
-      yScale: scale,
-      rotate: degrees(rot)
+      x,
+      y,
+      width: drawW,
+      height: drawH,
+      rotate: rotateForBestFit ? { type: 'degrees', angle: 90 } : undefined
     });
   };
 
   for (const spread of spreads) {
     const frontSheet = out.addPage([paperW, paperH]);
-    drawSlot(frontSheet, spread.front[0].pageNumber, 0);
-    drawSlot(frontSheet, spread.front[1].pageNumber, slotW);
+    const frontSlots = getSlots(paperW, paperH, slotsPerSheet);
+    const frontPages = [spread.front[0].pageNumber, spread.front[1].pageNumber, spread.back?.[0].pageNumber ?? null, spread.back?.[1].pageNumber ?? null];
 
-    if (settings.printMode === 'single' || spread.back) {
+    if (slotsPerSheet === 2) {
+      drawSlot(frontSheet, frontPages[0], frontSlots[0]);
+      drawSlot(frontSheet, frontPages[1], frontSlots[1]);
+    } else {
+      frontPages.forEach((pageNum, i) => drawSlot(frontSheet, pageNum, frontSlots[i]));
+    }
+
+    if (settings.printMode === 'single') {
       const backSheet = out.addPage([paperW, paperH]);
-      if (spread.back) {
-        drawSlot(backSheet, spread.back[0].pageNumber, 0);
-        drawSlot(backSheet, spread.back[1].pageNumber, slotW);
+      if (slotsPerSheet === 2) {
+        drawSlot(backSheet, spread.back?.[0].pageNumber ?? null, frontSlots[0]);
+        drawSlot(backSheet, spread.back?.[1].pageNumber ?? null, frontSlots[1]);
       }
+    } else if (slotsPerSheet === 2 && spread.back) {
+      const backSheet = out.addPage([paperW, paperH]);
+      drawSlot(backSheet, spread.back[0].pageNumber, frontSlots[0]);
+      drawSlot(backSheet, spread.back[1].pageNumber, frontSlots[1]);
     }
   }
 
