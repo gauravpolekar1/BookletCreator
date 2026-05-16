@@ -51,6 +51,16 @@ export const BookletPage = () => {
     }
   };
 
+  const updateMargin = (key: keyof BookletSettings['margins'], value: number) => {
+    setSettings((s) => ({
+      ...s,
+      margins: {
+        ...s.margins,
+        [key]: Math.max(0, value)
+      }
+    }));
+  };
+
   return (
     <main className="mx-auto max-w-6xl p-4 md:p-8">
       <div className="grid gap-6 md:grid-cols-2">
@@ -73,6 +83,17 @@ export const BookletPage = () => {
             <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.printMode} onChange={(e) => setSettings((s) => ({ ...s, printMode: e.target.value as BookletSettings['printMode'] }))}>
               <option value="duplex">Double-sided</option><option value="single">Single-sided</option>
             </select>
+
+            <label className="mb-2 mt-3 block text-sm">Margins (mm)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.inner} onChange={(e) => updateMargin('inner', Number(e.target.value))} placeholder="Inner" />
+              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.outer} onChange={(e) => updateMargin('outer', Number(e.target.value))} placeholder="Outer" />
+              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.top} onChange={(e) => updateMargin('top', Number(e.target.value))} placeholder="Top" />
+              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.bottom} onChange={(e) => updateMargin('bottom', Number(e.target.value))} placeholder="Bottom" />
+            </div>
+
+            <label className="mb-2 mt-3 block text-sm">Gutter (mm)</label>
+            <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.gutter} onChange={(e) => setSettings((s) => ({ ...s, gutter: Math.max(0, Number(e.target.value)) }))} />
 
             <button disabled={!file || loading} onClick={create} className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900">
               {loading ? 'Generating…' : 'Generate booklet PDF'}

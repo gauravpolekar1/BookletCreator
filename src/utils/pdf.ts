@@ -34,6 +34,21 @@ const getSlots = (paperW: number, paperH: number, slotsPerSheet: 2 | 4): Slot[] 
   ];
 };
 
+const getSlotPadding = (slotIndex: number, slotsPerSheet: 2 | 4, settings: BookletSettings) => {
+  const isLeftColumn = slotsPerSheet === 2 ? slotIndex === 0 : slotIndex % 2 === 0;
+  const gutterHalf = mmToPt(settings.gutter) / 2;
+
+  const left = mmToPt(isLeftColumn ? settings.margins.outer : settings.margins.inner) + (isLeftColumn ? 0 : gutterHalf);
+  const right = mmToPt(isLeftColumn ? settings.margins.inner : settings.margins.outer) + (isLeftColumn ? gutterHalf : 0);
+
+  return {
+    left,
+    right,
+    top: mmToPt(settings.margins.top),
+    bottom: mmToPt(settings.margins.bottom)
+  };
+};
+
 export const generateBookletPdf = async (file: File, settings: BookletSettings): Promise<Uint8Array> => {
   const srcBytes = await file.arrayBuffer();
   const src = await PDFDocument.load(srcBytes);
@@ -46,16 +61,15 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
   const embeddedPages = await out.embedPages(pages);
 
-  const drawSlot = (sheet: PDFPage, pageNum: number | null, slot: Slot) => {
+  const drawSlot = (sheet: PDFPage, pageNum: number | null, slot: Slot, slotIndex: number) => {
     if (pageNum === null) return;
 
     const pageIndex = pageNum - 1;
     const embed = embeddedPages[pageIndex];
 
-    const marginX = mmToPt(settings.margins.inner + settings.margins.outer + settings.gutter) / 2;
-    const marginY = mmToPt(settings.margins.top + settings.margins.bottom) / 2;
-    const contentW = Math.max(0, slot.w - marginX * 2);
-    const contentH = Math.max(0, slot.h - marginY * 2);
+    const padding = getSlotPadding(slotIndex, slotsPerSheet, settings);
+    const contentW = Math.max(0, slot.w - padding.left - padding.right);
+    const contentH = Math.max(0, slot.h - padding.top - padding.bottom);
 
     const normalScale = Math.min(contentW / embed.width, contentH / embed.height);
     const rotatedScale = Math.min(contentW / embed.height, contentH / embed.width);
@@ -64,8 +78,8 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
     const drawW = (rotateForBestFit ? embed.height : embed.width) * (rotateForBestFit ? rotatedScale : normalScale);
     const drawH = (rotateForBestFit ? embed.width : embed.height) * (rotateForBestFit ? rotatedScale : normalScale);
 
-    const x = slot.x + (slot.w - drawW) / 2;
-    const y = slot.y + (slot.h - drawH) / 2;
+    const x = slot.x + padding.left + (contentW - drawW) / 2;
+    const y = slot.y + padding.bottom + (contentH - drawH) / 2;
 
     sheet.drawPage(embed, {
       x,
@@ -82,22 +96,22 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
     const frontPages = [spread.front[0].pageNumber, spread.front[1].pageNumber, spread.back?.[0].pageNumber ?? null, spread.back?.[1].pageNumber ?? null];
 
     if (slotsPerSheet === 2) {
-      drawSlot(frontSheet, frontPages[0], frontSlots[0]);
-      drawSlot(frontSheet, frontPages[1], frontSlots[1]);
+      drawSlot(frontSheet, frontPages[0], frontSlots[0], 0);
+      drawSlot(frontSheet, frontPages[1], frontSlots[1], 1);
     } else {
-      frontPages.forEach((pageNum, i) => drawSlot(frontSheet, pageNum, frontSlots[i]));
+      frontPages.forEach((pageNum, i) => drawSlot(frontSheet, pageNum, frontSlots[i], i));
     }
 
     if (settings.printMode === 'single') {
       const backSheet = out.addPage([paperW, paperH]);
       if (slotsPerSheet === 2) {
-        drawSlot(backSheet, spread.back?.[0].pageNumber ?? null, frontSlots[0]);
-        drawSlot(backSheet, spread.back?.[1].pageNumber ?? null, frontSlots[1]);
+        drawSlot(backSheet, spread.back?.[0].pageNumber ?? null, frontSlots[0], 0);
+        drawSlot(backSheet, spread.back?.[1].pageNumber ?? null, frontSlots[1], 1);
       }
     } else if (slotsPerSheet === 2 && spread.back) {
       const backSheet = out.addPage([paperW, paperH]);
-      drawSlot(backSheet, spread.back[0].pageNumber, frontSlots[0]);
-      drawSlot(backSheet, spread.back[1].pageNumber, frontSlots[1]);
+      drawSlot(backSheet, spread.back[0].pageNumber, frontSlots[0], 0);
+      drawSlot(backSheet, spread.back[1].pageNumber, frontSlots[1], 1);
     }
   }
 
