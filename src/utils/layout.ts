@@ -14,3 +14,5 @@ export const getTargetPageDimensions = (paper: PaperSize, booklet: BookletSize):
   if (booklet === 'A5') return [w / 2, h];
   return [w / 2, h / 2];
 };
+
+export const getSlotsPerSheet = (booklet: BookletSize): 2 | 4 => (booklet === 'A5' ? 2 : 4);
