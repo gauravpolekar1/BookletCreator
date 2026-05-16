@@ -23,9 +23,11 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
   const drawSlot = (sheet: import('pdf-lib').PDFPage, pageNum: number | null, x: number) => {
     if (pageNum === null) return;
-    const embed = map[pageNum - 1];
+    const pageIndex = pageNum - 1;
+    const embed = map[pageIndex];
+    const srcPage = pages[pageIndex];
     const { width, height } = embed;
-    const rot = embed.rotation.angle;
+    const rot = srcPage.getRotation().angle;
     const adjustedWidth = rot === 90 || rot === 270 ? height : width;
     const adjustedHeight = rot === 90 || rot === 270 ? width : height;
 
