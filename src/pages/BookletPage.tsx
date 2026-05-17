@@ -92,6 +92,7 @@ export const BookletPage = () => {
     }));
   };
 
+  
   return (
     <main className="mx-auto max-w-6xl p-4 md:p-8">
       <div className="grid gap-6 md:grid-cols-2">
