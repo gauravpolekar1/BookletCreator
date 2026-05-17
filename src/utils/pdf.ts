@@ -10,6 +10,11 @@ interface Slot {
   h: number;
 }
 
+interface FourUpSide {
+  front: [number | null, number | null, number | null, number | null];
+  back: [number | null, number | null, number | null, number | null];
+}
+
 export const loadPdf = async (file: File): Promise<PDFDocument> => {
   const bytes = await file.arrayBuffer();
   return PDFDocument.load(bytes);
@@ -61,6 +66,24 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
   const embeddedPages = await out.embedPages(pages);
 
+  const toPageNum = (page: number): number | null => (page >= 1 && page <= pages.length ? page : null);
+  const buildFourUpSides = (): FourUpSide[] => {
+    const padded = Math.ceil(pages.length / 8) * 8;
+    const sides: FourUpSide[] = [];
+
+    for (let offset = 0; offset < padded / 2; offset += 4) {
+      const low = 1 + offset;
+      const high = padded - offset;
+
+      sides.push({
+        front: [toPageNum(high), toPageNum(low), toPageNum(high - 2), toPageNum(low + 2)],
+        back: [toPageNum(low + 1), toPageNum(high - 1), toPageNum(low + 3), toPageNum(high - 3)]
+      });
+    }
+
+    return sides;
+  };
+
   const drawSlot = (sheet: PDFPage, pageNum: number | null, slot: Slot, slotIndex: number) => {
     if (pageNum === null) return;
 
@@ -91,6 +114,7 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
   };
 
   for (const spread of spreads) {
+    if (slotsPerSheet === 4) continue;
     const frontSheet = out.addPage([paperW, paperH]);
     const frontSlots = getSlots(paperW, paperH, slotsPerSheet);
     const frontPages = [spread.front[0].pageNumber, spread.front[1].pageNumber, spread.back?.[0].pageNumber ?? null, spread.back?.[1].pageNumber ?? null];
@@ -112,6 +136,19 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
       const backSheet = out.addPage([paperW, paperH]);
       drawSlot(backSheet, spread.back[0].pageNumber, frontSlots[0], 0);
       drawSlot(backSheet, spread.back[1].pageNumber, frontSlots[1], 1);
+    }
+  }
+
+  if (slotsPerSheet === 4) {
+    const slots = getSlots(paperW, paperH, slotsPerSheet);
+    const sides = buildFourUpSides();
+
+    for (const side of sides) {
+      const frontSheet = out.addPage([paperW, paperH]);
+      side.front.forEach((pageNum, i) => drawSlot(frontSheet, pageNum, slots[i], i));
+
+      const backSheet = out.addPage([paperW, paperH]);
+      side.back.forEach((pageNum, i) => drawSlot(backSheet, pageNum, slots[i], i));
     }
   }
 

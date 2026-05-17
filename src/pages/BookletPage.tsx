@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DropzoneUploader } from '../components/DropzoneUploader';
 import { PreviewGrid } from '../components/PreviewGrid';
 import { PdfPreview } from '../components/PdfPreview';
@@ -23,10 +23,41 @@ export const BookletPage = () => {
   const [pageCount, setPageCount] = useState(0);
   const [settings, setSettings] = useState<BookletSettings>(defaults);
   const [loading, setLoading] = useState(false);
+  const [outputPreview, setOutputPreview] = useState<Uint8Array | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const spreads = useMemo(() => buildSheetSpreads(pageCount, settings), [pageCount, settings]);
   const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
-  const sheets = slotsPerSheet === 2 ? Math.ceil(pageCount / 4) : Math.ceil(pageCount / 4);
+  const pagesPerSheet = slotsPerSheet * 2;
+  const sheets = Math.ceil(pageCount / pagesPerSheet);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const regeneratePreview = async () => {
+      if (!file) {
+        setOutputPreview(null);
+        return;
+      }
+      setPreviewLoading(true);
+      try {
+        const bytes = await generateBookletPdf(file, settings);
+        if (!cancelled) {
+          setOutputPreview(bytes);
+        }
+      } finally {
+        if (!cancelled) {
+          setPreviewLoading(false);
+        }
+      }
+    };
+
+    void regeneratePreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [file, settings]);
 
   const onFile = async (f: File) => {
     setFile(f);
@@ -39,7 +70,7 @@ export const BookletPage = () => {
     setLoading(true);
     try {
       const bytes = await generateBookletPdf(file, settings);
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -66,7 +97,14 @@ export const BookletPage = () => {
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <DropzoneUploader onFile={onFile} />
-          <PdfPreview file={file} />
+          <div>
+            <div className="mb-2 text-sm text-slate-500">Input preview</div>
+            <PdfPreview file={file} ariaLabel="Input PDF first page preview" />
+          </div>
+          <div>
+            <div className="mb-2 text-sm text-slate-500">Output preview {previewLoading ? '· Updating…' : ''}</div>
+            <PdfPreview bytes={outputPreview} ariaLabel="Output PDF first page preview" />
+          </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
             <label className="mb-2 block text-sm">Output paper size</label>
             <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.paperSize} onChange={(e) => setSettings((s) => ({ ...s, paperSize: e.target.value as BookletSettings['paperSize'] }))}>
@@ -102,7 +140,8 @@ export const BookletPage = () => {
         </div>
         <div className="space-y-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <div className="text-sm text-slate-500">Input pages: {pageCount} · Output sheets: {sheets}</div>
+            <div className="text-sm text-slate-500">Input pages: {pageCount} · Pages per sheet: {pagesPerSheet} · Output sheets: {sheets}</div>
+            <div className="mt-2 text-sm text-slate-500">Margins (mm): Inner {settings.margins.inner}, Outer {settings.margins.outer}, Top {settings.margins.top}, Bottom {settings.margins.bottom}</div>
             <div className="mt-2 text-sm">Print instructions: 1) Print {settings.printMode === 'duplex' ? 'double-sided' : 'single-sided'} 2) Flip on {settings.duplexFlip} edge 3) Fold in center</div>
             <div className="mt-2 text-sm text-slate-500">Pages are auto-resized and auto-rotated (portrait/landscape) for best fit.</div>
           </div>
