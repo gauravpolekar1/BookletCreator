@@ -100,11 +100,11 @@ export const BookletPage = () => {
           <DropzoneUploader onFile={onFile} />
           <div>
             <div className="mb-2 text-sm text-slate-500">Input preview</div>
-            <PdfPreview file={file} ariaLabel="Input PDF first page preview" />
+            <PdfPreview file={file} ariaLabel="Input PDF preview" compact />
           </div>
           <div>
             <div className="mb-2 text-sm text-slate-500">Output preview {previewLoading ? '· Updating…' : ''}</div>
-            <PdfPreview bytes={outputPreview} ariaLabel="Output PDF first page preview" />
+            <PdfPreview bytes={outputPreview} ariaLabel="Output PDF preview" showAllPages />
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
             <label className="mb-2 block text-sm">Output paper size</label>
