@@ -71,11 +71,13 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
     const padded = Math.ceil(pages.length / 8) * 8;
     const sides: FourUpSide[] = [];
 
-    for (let start = 1; start <= padded; start += 8) {
-      const end = start + 7;
+    for (let offset = 0; offset < padded / 2; offset += 4) {
+      const low = 1 + offset;
+      const high = padded - offset;
+
       sides.push({
-        front: [toPageNum(end), toPageNum(start), toPageNum(end - 2), toPageNum(start + 2)],
-        back: [toPageNum(start + 1), toPageNum(end - 1), toPageNum(start + 3), toPageNum(end - 3)]
+        front: [toPageNum(high), toPageNum(low), toPageNum(high - 2), toPageNum(low + 2)],
+        back: [toPageNum(low + 1), toPageNum(high - 1), toPageNum(low + 3), toPageNum(high - 3)]
       });
     }
 
