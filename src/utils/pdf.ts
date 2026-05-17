@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage } from 'pdf-lib';
+import { PDFDocument, PDFPage, degrees } from 'pdf-lib';
 import { BookletSettings } from '../types/booklet';
 import { getPaperDimensions, getSlotsPerSheet, mmToPt } from './layout';
 import { buildSheetSpreads } from './imposition';
@@ -109,7 +109,7 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
       y,
       width: drawW,
       height: drawH,
-      rotate: rotateForBestFit ? { type: 'degrees', angle: 90 } : undefined
+      rotate: rotateForBestFit ? degrees(90) : undefined
     });
   };
 
