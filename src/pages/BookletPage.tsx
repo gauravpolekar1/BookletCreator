@@ -92,9 +92,16 @@ export const BookletPage = () => {
     }));
   };
 
+  const labelStyle = 'mb-2 mt-3 block text-sm font-medium text-slate-700 dark:text-slate-200';
+  const fieldStyle = 'w-full rounded-lg border border-slate-300 bg-white p-2 text-slate-800 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100';
 
   return (
     <main className="mx-auto max-w-6xl p-4 md:p-8">
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-xl font-semibold">Create booklet-ready PDFs for perfect double-sided printing</h2>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Need to convert a normal PDF into booklet order? Upload your file, choose paper size and margins, and instantly download print-ready output for manuals, church programs, catalogs, event guides, and training handouts.</p>
+      </section>
+
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <DropzoneUploader onFile={onFile} />
@@ -106,41 +113,41 @@ export const BookletPage = () => {
             <div className="mb-2 text-sm text-slate-500">Output preview {previewLoading ? '· Updating…' : ''}</div>
             <PdfPreview bytes={outputPreview} ariaLabel="Output PDF preview" showAllPages />
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-            <label className="mb-2 block text-sm">Output paper size</label>
-            <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.paperSize} onChange={(e) => setSettings((s) => ({ ...s, paperSize: e.target.value as BookletSettings['paperSize'] }))}>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Output paper size</label>
+            <select className={fieldStyle} value={settings.paperSize} onChange={(e) => setSettings((s) => ({ ...s, paperSize: e.target.value as BookletSettings['paperSize'] }))}>
               <option>A4</option><option>Letter</option>
             </select>
 
-            <label className="mb-2 mt-3 block text-sm">Pages per sheet</label>
-            <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.bookletSize} onChange={(e) => setSettings((s) => ({ ...s, bookletSize: e.target.value as BookletSettings['bookletSize'] }))}>
+            <label className={labelStyle}>Pages per sheet</label>
+            <select className={fieldStyle} value={settings.bookletSize} onChange={(e) => setSettings((s) => ({ ...s, bookletSize: e.target.value as BookletSettings['bookletSize'] }))}>
               <option value="A5">2 pages per sheet (A5)</option>
               <option value="A6">4 pages per sheet (A6)</option>
             </select>
 
-            <label className="mb-2 mt-3 block text-sm">Print mode</label>
-            <select className="w-full rounded-lg border p-2 bg-transparent" value={settings.printMode} onChange={(e) => setSettings((s) => ({ ...s, printMode: e.target.value as BookletSettings['printMode'] }))}>
+            <label className={labelStyle}>Print mode</label>
+            <select className={fieldStyle} value={settings.printMode} onChange={(e) => setSettings((s) => ({ ...s, printMode: e.target.value as BookletSettings['printMode'] }))}>
               <option value="duplex">Double-sided</option><option value="single">Single-sided</option>
             </select>
 
-            <label className="mb-2 mt-3 block text-sm">Margins (mm)</label>
+            <label className={labelStyle}>Margins (mm)</label>
             <div className="grid grid-cols-2 gap-2">
-              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.inner} onChange={(e) => updateMargin('inner', Number(e.target.value))} placeholder="Inner" />
-              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.outer} onChange={(e) => updateMargin('outer', Number(e.target.value))} placeholder="Outer" />
-              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.top} onChange={(e) => updateMargin('top', Number(e.target.value))} placeholder="Top" />
-              <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.margins.bottom} onChange={(e) => updateMargin('bottom', Number(e.target.value))} placeholder="Bottom" />
+              <input type="number" min={0} step={1} className={fieldStyle} value={settings.margins.inner} onChange={(e) => updateMargin('inner', Number(e.target.value))} placeholder="Inner" />
+              <input type="number" min={0} step={1} className={fieldStyle} value={settings.margins.outer} onChange={(e) => updateMargin('outer', Number(e.target.value))} placeholder="Outer" />
+              <input type="number" min={0} step={1} className={fieldStyle} value={settings.margins.top} onChange={(e) => updateMargin('top', Number(e.target.value))} placeholder="Top" />
+              <input type="number" min={0} step={1} className={fieldStyle} value={settings.margins.bottom} onChange={(e) => updateMargin('bottom', Number(e.target.value))} placeholder="Bottom" />
             </div>
 
-            <label className="mb-2 mt-3 block text-sm">Gutter (mm)</label>
-            <input type="number" min={0} step={1} className="w-full rounded-lg border p-2 bg-transparent" value={settings.gutter} onChange={(e) => setSettings((s) => ({ ...s, gutter: Math.max(0, Number(e.target.value)) }))} />
+            <label className={labelStyle}>Gutter (mm)</label>
+            <input type="number" min={0} step={1} className={fieldStyle} value={settings.gutter} onChange={(e) => setSettings((s) => ({ ...s, gutter: Math.max(0, Number(e.target.value)) }))} />
 
-            <button disabled={!file || loading} onClick={create} className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900">
+            <button disabled={!file || loading} onClick={create} className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-400">
               {loading ? 'Generating…' : 'Generate booklet PDF'}
             </button>
           </div>
         </div>
         <div className="space-y-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="text-sm text-slate-500">Input pages: {pageCount} · Pages per sheet: {pagesPerSheet} · Output sheets: {sheets}</div>
             <div className="mt-2 text-sm text-slate-500">Margins (mm): Inner {settings.margins.inner}, Outer {settings.margins.outer}, Top {settings.margins.top}, Bottom {settings.margins.bottom}</div>
             <div className="mt-2 text-sm">Print instructions: 1) Print {settings.printMode === 'duplex' ? 'double-sided' : 'single-sided'} 2) Flip on {settings.duplexFlip} edge 3) Fold in center</div>
