@@ -14,6 +14,7 @@ const defaults: BookletSettings = {
   duplexFlip: 'short',
   margins: { inner: 8, outer: 8, top: 8, bottom: 8 },
   gutter: 3,
+  outputOrientation: 'portrait',
   signatures: 1,
   rtl: false
 };
@@ -119,6 +120,13 @@ export const BookletPage = () => {
               <option>A4</option><option>Letter</option>
             </select>
 
+
+            <label className={labelStyle}>Output orientation</label>
+            <select className={fieldStyle} value={settings.outputOrientation} onChange={(e) => setSettings((s) => ({ ...s, outputOrientation: e.target.value as BookletSettings['outputOrientation'] }))}>
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+
             <label className={labelStyle}>Pages per sheet</label>
             <select className={fieldStyle} value={settings.bookletSize} onChange={(e) => setSettings((s) => ({ ...s, bookletSize: e.target.value as BookletSettings['bookletSize'] }))}>
               <option value="A5">2 pages per sheet (A5)</option>
@@ -151,7 +159,7 @@ export const BookletPage = () => {
             <div className="text-sm text-slate-500">Input pages: {pageCount} · Pages per sheet: {pagesPerSheet} · Output sheets: {sheets}</div>
             <div className="mt-2 text-sm text-slate-500">Margins (mm): Inner {settings.margins.inner}, Outer {settings.margins.outer}, Top {settings.margins.top}, Bottom {settings.margins.bottom}</div>
             <div className="mt-2 text-sm">Print instructions: 1) Print {settings.printMode === 'duplex' ? 'double-sided' : 'single-sided'} 2) Flip on {settings.duplexFlip} edge 3) Fold in center</div>
-            <div className="mt-2 text-sm text-slate-500">Pages are auto-resized and auto-rotated (portrait/landscape) for best fit.</div>
+            <div className="mt-2 text-sm text-slate-500">Output orientation: {settings.outputOrientation}. Pages are auto-resized and auto-rotated for best fit.</div>
           </div>
           <PreviewGrid spreads={spreads} />
         </div>
