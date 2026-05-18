@@ -28,6 +28,7 @@ export const PdfPreview = ({
     const render = async () => {
       if (!file && !bytes) {
         setImages([]);
+        setSelectedPage(null);
         return;
       }
       const data = bytes ?? new Uint8Array(await file!.arrayBuffer());
@@ -49,11 +50,7 @@ export const PdfPreview = ({
 
       if (!cancelled) {
         setImages(renderedImages);
-        setSelectedPage((current) => {
-          if (renderedImages.length === 0) return null;
-          if (current === null || current > renderedImages.length) return 1;
-          return current;
-        });
+        setSelectedPage((current) => (current && current <= renderedImages.length ? current : null));
       }
       doc.destroy();
     };
@@ -77,7 +74,7 @@ export const PdfPreview = ({
             key={`${src}-${index}`}
             type="button"
             onClick={() => setSelectedPage(index + 1)}
-            className={`group overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 ${thumbnailClasses}`}
+            className={`group overflow-hidden rounded-xl border border-slate-200 transition hover:shadow-md dark:border-slate-800 ${thumbnailClasses}`}
             aria-label={`${ariaLabel} page ${index + 1}`}
           >
             <img src={src} alt={`Preview page ${index + 1}`} className="h-auto w-full" />
