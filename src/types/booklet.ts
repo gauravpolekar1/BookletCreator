@@ -2,6 +2,7 @@ export type PaperSize = 'A4' | 'Letter';
 export type BookletSize = 'A5' | 'A6';
 export type PrintMode = 'duplex' | 'single';
 export type DuplexFlip = 'long' | 'short';
+export type OutputOrientation = 'portrait' | 'landscape';
 
 export interface MarginSettings {
   inner: number;
@@ -17,6 +18,7 @@ export interface BookletSettings {
   duplexFlip: DuplexFlip;
   margins: MarginSettings;
   gutter: number;
+  outputOrientation: OutputOrientation;
   signatures: number;
   rtl: boolean;
 }

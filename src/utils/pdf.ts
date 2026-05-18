@@ -61,7 +61,7 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
   const pages = src.getPages();
   const spreads = buildSheetSpreads(pages.length, settings);
-  const [paperW, paperH] = getPaperDimensions(settings.paperSize);
+  const [paperW, paperH] = getPaperDimensions(settings.paperSize, settings.outputOrientation);
   const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
 
   const embeddedPages = await out.embedPages(pages);
