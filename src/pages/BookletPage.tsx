@@ -73,11 +73,6 @@ export const BookletPage = () => {
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="mb-2 font-semibold">Booklet Preview Studio</h3>
-                <div className="mb-3 flex items-center justify-between text-xs">
-                  <button type="button" className="rounded-lg border border-slate-300 px-2 py-1" onClick={() => setCurrentSheet((v) => Math.max(1, v - 1))}>◀</button>
-                  <span className="font-medium">Print preview · Sheet {Math.min(currentSheet, Math.max(1, spreads.length))} / {Math.max(1, spreads.length)}</span>
-                  <button type="button" className="rounded-lg border border-slate-300 px-2 py-1" onClick={() => setCurrentSheet((v) => Math.min(Math.max(1, spreads.length), v + 1))}>▶</button>
-                </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <PdfPreview file={file} ariaLabel="input" compact />
                   <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages />

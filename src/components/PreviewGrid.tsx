@@ -16,10 +16,11 @@ export const PreviewGrid = ({ spreads, currentSheet, onSheetChange }: { spreads:
         </div>
       </div>
 
-      <div className="max-h-40 space-y-2 overflow-auto pr-1">
+      <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
         {spreads.map((s) => (
           <button key={s.sheetIndex} type="button" onClick={() => onSheetChange(s.sheetIndex)} className={`w-full rounded-xl border p-2 text-left text-xs ${s.sheetIndex === selected.sheetIndex ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'}`}>
-            Sheet {s.sheetIndex}: F {label(s.front[0])}/{label(s.front[1])}
+            <div className="font-medium">Sheet {s.sheetIndex}</div>
+            <div className="text-slate-500">Front {label(s.front[0])}/{label(s.front[1])} · Back {s.back ? `${label(s.back[0])}/${label(s.back[1])}` : 'N/A'}</div>
           </button>
         ))}
       </div>
