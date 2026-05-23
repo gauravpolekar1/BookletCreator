@@ -9,18 +9,7 @@ import { buildSheetSpreads } from '../utils/imposition';
 import { getSlotsPerSheet } from '../utils/layout';
 import { generateBookletPdf, loadPdf } from '../utils/pdf';
 
-const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true };
-
-const moduleSeo: Record<ToolId, { title: string; details: string[] }> = {
-  booklet: { title: 'Booklet Creator', details: ['Animated folding sequence preview for saddle-stitch and center-fold booklets.', 'SEO: booklet printing software, booklet imposition tool, PDF booklet creator online.', 'Best for manuals, service booklets, church programs, training handouts, and mini-books.'] },
-  nup: { title: 'N-Up Printing', details: ['N-up text guide for 2-up, 4-up, 6-up, and 8-up compact printing layouts.', 'SEO: n-up PDF printing, print multiple PDF pages per sheet, lecture slide handout printer.', 'Use to reduce paper usage for notes, revision sheets, and flashcard prep.'] },
-  signatures: { title: 'Signature Generator', details: ['Signature planning guide for 4/8/16/32-page folded sections and bindery collation.', 'SEO: book signature generator, sewing signature layout, print signature calculator.', 'Includes stitching-oriented guidance and section planning terminology.'] },
-  zine: { title: 'Zine Creator', details: ['Zine mode with fold/cut sequence explanation for one-sheet mini-zines.', 'SEO: printable zine template PDF, mini zine folding layout, DIY zine print maker.', 'Maker-friendly guidance for classroom and workshop zine printing.'] },
-  preview: { title: 'Print Preview Studio', details: ['Interactive preview narrative with sheet-by-sheet sequencing and side mapping.', 'SEO: print preview studio PDF, duplex sheet preview, imposition preview tool.', 'Focuses on physical paper orientation before final print.'] },
-  duplex: { title: 'Duplex Assistant', details: ['Duplex education for flip on long edge vs flip on short edge with troubleshooting text.', 'SEO: duplex printing assistant, PDF double-sided printing help, printer flip orientation guide.', 'Reduces upside-down backs and mirrored back-page mistakes.'] },
-  arrange: { title: 'Page Arrangement', details: ['Page arrangement guidance for insertion/removal, reorder, duplicate, and rotate operations.', 'SEO: reorder PDF pages before print, insert blank PDF pages, print page arrangement.', 'Supports prepress cleanup before booklet generation.'] },
-  calibration: { title: 'Calibration', details: ['Calibration notes for margin tests, fold alignment checks, and duplex offset diagnostics.', 'SEO: print calibration PDF, duplex alignment test page, booklet fold calibration.', 'Helps tune printer settings for reliable physical output.'] }
-};
+const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true, insertBlankAfterEvery: 0 };
 
 export const BookletPage = () => {
   const [activeTool, setActiveTool] = useState<ToolId>('booklet');
@@ -76,12 +65,6 @@ export const BookletPage = () => {
       </section>
       <Shell active={activeTool} onSelect={setActiveTool}>
         <motion.div key={activeTool} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-            <h3 className="font-semibold">{moduleSeo[activeTool].title}</h3>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-600 dark:text-slate-300">
-              {moduleSeo[activeTool].details.map((detail) => <li key={detail}>{detail}</li>)}
-            </ul>
-          </div>
           <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
             <div className="space-y-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -91,9 +74,9 @@ export const BookletPage = () => {
               <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="mb-2 font-semibold">Booklet Preview Studio</h3>
                 <div className="mb-3 flex items-center justify-between text-xs">
-                  <button type="button" className="rounded-lg border border-slate-300 px-2 py-1" onClick={() => setCurrentSheet((v) => Math.max(1, v - 1))}>Previous sheet</button>
+                  <button type="button" className="rounded-lg border border-slate-300 px-2 py-1" onClick={() => setCurrentSheet((v) => Math.max(1, v - 1))}>◀</button>
                   <span className="font-medium">Print preview · Sheet {Math.min(currentSheet, Math.max(1, spreads.length))} / {Math.max(1, spreads.length)}</span>
-                  <button type="button" className="rounded-lg border border-slate-300 px-2 py-1" onClick={() => setCurrentSheet((v) => Math.min(Math.max(1, spreads.length), v + 1))}>Next sheet</button>
+                  <button type="button" className="rounded-lg border border-slate-300 px-2 py-1" onClick={() => setCurrentSheet((v) => Math.min(Math.max(1, spreads.length), v + 1))}>▶</button>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <PdfPreview file={file} ariaLabel="input" compact />
@@ -122,6 +105,16 @@ export const BookletPage = () => {
               </div>
               <h4 className="mt-4 font-semibold">Gutter (mm)</h4>
               <input type="number" min={0} value={settings.gutter} onChange={(e) => setSettings((s) => ({ ...s, gutter: Math.max(0, Number(e.target.value)) }))} className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" />
+              
+              <h4 className="mt-4 font-semibold">Insert blank pages in-between</h4>
+              <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" value={settings.insertBlankAfterEvery} onChange={(e) => setSettings((v) => ({ ...v, insertBlankAfterEvery: Number(e.target.value) }))}>
+                <option value={0}>No inserted blanks</option>
+                <option value={1}>After every 1 page</option>
+                <option value={2}>After every 2 pages</option>
+                <option value={4}>After every 4 pages</option>
+                <option value={8}>After every 8 pages</option>
+              </select>
+
               <h4 className="mt-4 font-semibold">Guided production lines</h4>
               <div className="mt-2 space-y-2">
                 <label className="flex items-center gap-2"><input type="checkbox" checked={settings.foldGuides} onChange={(e) => setSettings((s) => ({ ...s, foldGuides: e.target.checked }))} /> Fold lines</label>

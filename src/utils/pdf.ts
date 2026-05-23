@@ -84,7 +84,21 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
   const src = await PDFDocument.load(srcBytes);
   const out = await PDFDocument.create();
 
-  const pages = src.getPages();
+  let workingDoc = src;
+  if (settings.insertBlankAfterEvery > 0) {
+    const rebuilt = await PDFDocument.create();
+    const sourcePages = src.getPages();
+    const copied = await rebuilt.copyPages(src, sourcePages.map((_, i) => i));
+    copied.forEach((pg, index) => {
+      rebuilt.addPage(pg);
+      if ((index + 1) % settings.insertBlankAfterEvery === 0 && index !== copied.length - 1) {
+        rebuilt.addPage([pg.getWidth(), pg.getHeight()]);
+      }
+    });
+    workingDoc = rebuilt;
+  }
+
+  const pages = workingDoc.getPages();
   const spreads = buildSheetSpreads(pages.length, settings);
   const [paperW, paperH] = getPaperDimensions(settings.paperSize, settings.outputOrientation);
   const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);

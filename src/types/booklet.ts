@@ -29,7 +29,9 @@ export interface BookletSettings {
   foldGuides: boolean;
   cutGuides: boolean;
   stitchGuides: boolean;
+  insertBlankAfterEvery: number;
 }
+
 
 export interface ImposedCell {
   pageNumber: number | null;
