@@ -14,9 +14,12 @@ export const PreviewGrid = ({ spreads, currentSheet, onSheetChange }: { spreads:
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-2 font-medium">Sheet {selected.sheetIndex}</div>
-        <div>Front: {label(selected.front[0])} | {label(selected.front[1])}</div>
-        <div>Back: {selected.back ? `${label(selected.back[0])} | ${label(selected.back[1])}` : 'N/A'}</div>
+        <div className="mb-2 font-medium">Sheet {selected.sheetIndex} (same physical paper)</div>
+        <div>Front side: {label(selected.front[0])} | {label(selected.front[1])}</div>
+        <div>Back side: {selected.back ? `${label(selected.back[0])} | ${label(selected.back[1])}` : 'N/A'}</div>
+        <div className="mt-2 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          Duplex mapping: front-left ⇄ back-left and front-right ⇄ back-right after flipping the <strong>same sheet</strong>.
+        </div>
       </div>
 
       <div className="max-h-40 space-y-2 overflow-auto pr-1">

@@ -111,6 +111,7 @@ export const BookletPage = () => {
               </div>
 
               <p className="mt-4 text-xs text-slate-500">Pages: {pageCount} · {pagesPerSheet} pages/sheet · Duplex: {settings.duplexFlip}-edge.</p>
+              <p className="mt-2 text-xs text-slate-500">For each sheet: print the Front side first, then print the Back side on the reverse of the same paper (not on page P2 itself).</p>
               <p className="mt-2 text-xs text-slate-500">4-up order is signature-ready: each sheet side contains 4 logical pages; cut, stack, fold, then stitch.</p>
             </div>
           </div>
