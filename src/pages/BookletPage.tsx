@@ -18,6 +18,7 @@ export const BookletPage = () => {
   const [settings, setSettings] = useState<BookletSettings>(defaults);
   const [outputPreview, setOutputPreview] = useState<Uint8Array | null>(null);
   const [currentSheet, setCurrentSheet] = useState(1);
+  const [downloading, setDownloading] = useState(false);
 
   const spreads = useMemo(() => buildSheetSpreads(pageCount, settings), [pageCount, settings]);
   const pagesPerSheet = getSlotsPerSheet(settings.bookletSize) * 2;
@@ -35,6 +36,23 @@ export const BookletPage = () => {
 
   const updateMargin = (key: keyof BookletSettings['margins'], value: number) => {
     setSettings((current) => ({ ...current, margins: { ...current.margins, [key]: Math.max(0, value) } }));
+  };
+
+  const downloadPdf = async () => {
+    if (!file) return;
+    setDownloading(true);
+    try {
+      const bytes = await generateBookletPdf(file, settings);
+      const blob = new Blob([new Uint8Array(bytes)], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${file.name.replace(/\.pdf$/i, '')}-booklet.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -118,6 +136,10 @@ export const BookletPage = () => {
               <p className="mt-4 text-xs text-slate-500">Pages: {pageCount} · {pagesPerSheet} pages/sheet · Duplex: {settings.duplexFlip}-edge.</p>
               <p className="mt-2 text-xs text-slate-500">For each sheet: print the Front side first, then print the Back side on the reverse of the same paper (not on page P2 itself).</p>
               <p className="mt-2 text-xs text-slate-500">4-up order is signature-ready: each sheet side contains 4 logical pages; cut, stack, fold, then stitch.</p>
+              <button type="button" disabled={!file || downloading} onClick={downloadPdf} className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+                {downloading ? 'Generating PDF…' : 'Generate PDF & Download'}
+              </button>
+
             </div>
           </div>
         </motion.div>
