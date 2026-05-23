@@ -9,7 +9,7 @@ import { buildSheetSpreads } from '../utils/imposition';
 import { getSlotsPerSheet } from '../utils/layout';
 import { generateBookletPdf, loadPdf } from '../utils/pdf';
 
-const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false };
+const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true };
 
 export const BookletPage = () => {
   const [activeTool, setActiveTool] = useState<ToolId>('booklet');
@@ -17,6 +17,7 @@ export const BookletPage = () => {
   const [pageCount, setPageCount] = useState(0);
   const [settings, setSettings] = useState<BookletSettings>(defaults);
   const [outputPreview, setOutputPreview] = useState<Uint8Array | null>(null);
+  const [currentSheet, setCurrentSheet] = useState(1);
 
   const spreads = useMemo(() => buildSheetSpreads(pageCount, settings), [pageCount, settings]);
   const pagesPerSheet = getSlotsPerSheet(settings.bookletSize) * 2;
@@ -59,7 +60,7 @@ export const BookletPage = () => {
                   <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages />
                 </div>
                 <div className="mt-3">
-                  <PreviewGrid spreads={spreads} />
+                  <PreviewGrid spreads={spreads} currentSheet={currentSheet} onSheetChange={setCurrentSheet} />
                 </div>
               </div>
             </div>
@@ -101,7 +102,16 @@ export const BookletPage = () => {
               <h4 className="mt-4 font-semibold">Gutter (mm)</h4>
               <input type="number" min={0} value={settings.gutter} onChange={(e) => setSettings((s) => ({ ...s, gutter: Math.max(0, Number(e.target.value)) }))} className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" />
 
+
+              <h4 className="mt-4 font-semibold">Guided production lines</h4>
+              <div className="mt-2 space-y-2">
+                <label className="flex items-center gap-2"><input type="checkbox" checked={settings.foldGuides} onChange={(e) => setSettings((s) => ({ ...s, foldGuides: e.target.checked }))} /> Fold lines</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={settings.cutGuides} onChange={(e) => setSettings((s) => ({ ...s, cutGuides: e.target.checked }))} /> Cut lines (best for 4-up)</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={settings.stitchGuides} onChange={(e) => setSettings((s) => ({ ...s, stitchGuides: e.target.checked }))} /> Stitch marks</label>
+              </div>
+
               <p className="mt-4 text-xs text-slate-500">Pages: {pageCount} · {pagesPerSheet} pages/sheet · Duplex: {settings.duplexFlip}-edge.</p>
+              <p className="mt-2 text-xs text-slate-500">4-up order is signature-ready: each sheet side contains 4 logical pages; cut, stack, fold, then stitch.</p>
             </div>
           </div>
         </motion.div>

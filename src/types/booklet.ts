@@ -26,6 +26,9 @@ export interface BookletSettings {
   cropMarks: boolean;
   bleedMarks: boolean;
   printMarks: boolean;
+  foldGuides: boolean;
+  cutGuides: boolean;
+  stitchGuides: boolean;
 }
 
 export interface ImposedCell {
