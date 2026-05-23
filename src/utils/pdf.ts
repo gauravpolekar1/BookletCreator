@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage, degrees } from 'pdf-lib';
+import { PDFDocument, PDFPage, degrees, rgb } from 'pdf-lib';
 import { BookletSettings } from '../types/booklet';
 import { getPaperDimensions, getSlotsPerSheet, mmToPt } from './layout';
 import { buildSheetSpreads } from './imposition';
@@ -54,15 +54,44 @@ const getSlotPadding = (slotIndex: number, slotsPerSheet: 2 | 4, settings: Bookl
   };
 };
 
+
+const drawGuideLines = (sheet: PDFPage, paperW: number, paperH: number, slotsPerSheet: 2 | 4, settings: BookletSettings) => {
+  const centerX = paperW / 2;
+  const centerY = paperH / 2;
+  const mark = 10;
+
+  if (settings.foldGuides) {
+    sheet.drawLine({ start: { x: centerX, y: paperH - mark }, end: { x: centerX, y: paperH - 2 }, thickness: 0.7, color: rgb(0.2, 0.4, 0.95), opacity: 0.7 });
+    sheet.drawLine({ start: { x: centerX, y: 2 }, end: { x: centerX, y: mark }, thickness: 0.7, color: rgb(0.2, 0.4, 0.95), opacity: 0.7 });
+  }
+
+  if (settings.cutGuides && slotsPerSheet === 4) {
+    sheet.drawLine({ start: { x: centerX - mark, y: paperH - 2 }, end: { x: centerX + mark, y: paperH - 2 }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+    sheet.drawLine({ start: { x: centerX - mark, y: 2 }, end: { x: centerX + mark, y: 2 }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+    sheet.drawLine({ start: { x: 2, y: centerY - mark }, end: { x: 2, y: centerY + mark }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+    sheet.drawLine({ start: { x: paperW - 2, y: centerY - mark }, end: { x: paperW - 2, y: centerY + mark }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+  }
+
+  if (settings.stitchGuides && slotsPerSheet === 2) {
+    [paperH * 0.2, paperH * 0.5, paperH * 0.8].forEach((y) => {
+      sheet.drawLine({ start: { x: centerX - 4, y }, end: { x: centerX + 4, y }, thickness: 0.9, color: rgb(0.05, 0.05, 0.05), opacity: 0.7 });
+    });
+  }
+};
+
 export const generateBookletPdf = async (file: File, settings: BookletSettings): Promise<Uint8Array> => {
   const srcBytes = await file.arrayBuffer();
   const src = await PDFDocument.load(srcBytes);
   const out = await PDFDocument.create();
 
-  const pages = src.getPages();
+  let workingDoc = src;
+  const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
+
+
+  const pages = workingDoc.getPages();
   const spreads = buildSheetSpreads(pages.length, settings);
   const [paperW, paperH] = getPaperDimensions(settings.paperSize, settings.outputOrientation);
-  const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
+
 
   const embeddedPages = await out.embedPages(pages);
 
@@ -86,6 +115,23 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
   const drawSlot = (sheet: PDFPage, pageNum: number | null, slot: Slot, slotIndex: number) => {
     if (pageNum === null) return;
+
+    // --- ADD THIS BLOCK TO DYNAMICALLY FORCE SLOTS BLANK ---
+    const explicitAfter = new Set(
+      settings.insertBlankAfterPages
+        .split(',')
+        .map((v) => Number(v.trim()))
+        .filter((n) => Number.isFinite(n) && n > 0)
+    );
+
+    const cadenceMatch = settings.insertBlankAfterEvery > 0 && pageNum % settings.insertBlankAfterEvery === 0;
+    const explicitMatch = explicitAfter.has(pageNum);
+
+    // If this specific slot index should remain empty, exit here!
+    if (cadenceMatch || explicitMatch) {
+      return;
+    }
+    // -----------------------------------------------------
 
     const pageIndex = pageNum - 1;
     const embed = embeddedPages[pageIndex];
@@ -113,6 +159,7 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
     });
   };
 
+
   for (const spread of spreads) {
     if (slotsPerSheet === 4) continue;
     const frontSheet = out.addPage([paperW, paperH]);
@@ -128,12 +175,14 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
     if (settings.printMode === 'single') {
       const backSheet = out.addPage([paperW, paperH]);
+      drawGuideLines(backSheet, paperW, paperH, slotsPerSheet, settings);
       if (slotsPerSheet === 2) {
         drawSlot(backSheet, spread.back?.[0].pageNumber ?? null, frontSlots[0], 0);
         drawSlot(backSheet, spread.back?.[1].pageNumber ?? null, frontSlots[1], 1);
       }
     } else if (slotsPerSheet === 2 && spread.back) {
       const backSheet = out.addPage([paperW, paperH]);
+      drawGuideLines(backSheet, paperW, paperH, slotsPerSheet, settings);
       drawSlot(backSheet, spread.back[0].pageNumber, frontSlots[0], 0);
       drawSlot(backSheet, spread.back[1].pageNumber, frontSlots[1], 1);
     }
@@ -145,9 +194,11 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
     for (const side of sides) {
       const frontSheet = out.addPage([paperW, paperH]);
+      drawGuideLines(frontSheet, paperW, paperH, slotsPerSheet, settings);
       side.front.forEach((pageNum, i) => drawSlot(frontSheet, pageNum, slots[i], i));
 
       const backSheet = out.addPage([paperW, paperH]);
+      drawGuideLines(backSheet, paperW, paperH, slotsPerSheet, settings);
       side.back.forEach((pageNum, i) => drawSlot(backSheet, pageNum, slots[i], i));
     }
   }

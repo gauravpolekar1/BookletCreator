@@ -1,4 +1,4 @@
-export type PaperSize = 'A4' | 'Letter';
+export type PaperSize = 'A4' | 'A5' | 'A6' | 'Letter';
 export type BookletSize = 'A5' | 'A6';
 export type PrintMode = 'duplex' | 'single';
 export type DuplexFlip = 'long' | 'short';
@@ -19,9 +19,20 @@ export interface BookletSettings {
   margins: MarginSettings;
   gutter: number;
   outputOrientation: OutputOrientation;
-  signatures: number;
+  signatures: 1 | 4 | 8 | 16 | 32;
   rtl: boolean;
+  saddleStitch: boolean;
+  coverMode: 'auto' | 'separate';
+  cropMarks: boolean;
+  bleedMarks: boolean;
+  printMarks: boolean;
+  foldGuides: boolean;
+  cutGuides: boolean;
+  stitchGuides: boolean;
+  insertBlankAfterEvery: number;
+  insertBlankAfterPages: string;
 }
+
 
 export interface ImposedCell {
   pageNumber: number | null;
@@ -33,3 +44,13 @@ export interface SheetSpread {
   back: [ImposedCell, ImposedCell] | null;
   sheetIndex: number;
 }
+
+export type ToolId =
+  | 'booklet'
+  | 'nup'
+  | 'signatures'
+  | 'zine'
+  | 'preview'
+  | 'duplex'
+  | 'arrange'
+  | 'calibration';

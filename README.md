@@ -1,20 +1,28 @@
-# Booklet Creator
+# Printing & Booklet Specialist
 
-Client-side PDF booklet imposition web app built with React, Vite, TypeScript, TailwindCSS, pdf-lib, and PDF.js-ready architecture.
+Premium, privacy-first print layout studio for physical PDF workflows. The app runs **100% in your browser**, supports booklet/signature/zine use-cases, and is deployable directly to GitHub Pages.
 
-## Features
-- Drag-and-drop PDF upload
-- True booklet page ordering with blank page insertion
-- A4 / Letter paper support
-- A5 / A6 target booklet modes
-- Duplex/single-sided handling
-- RTL booklet toggle support in imposition core
-- Margin + gutter-aware fitting
-- Client-side PDF generation (no backend)
-- Dark mode, responsive UI, keyboard-friendly controls
-- GitHub Pages deployment workflow
+## Core Positioning
+- Files never leave your browser
+- 100% client-side processing (no backend)
+- Works offline (PWA)
+- Designed for real-world printing and duplex workflows
+- Open-source friendly static deployment
 
-## Quick Start
+## Modules
+1. Booklet Creator (flagship)
+2. N-Up Printing
+3. Signature Generator
+4. Zine Creator
+5. Print Preview Studio
+6. Duplex Printing Assistant
+7. Page Arrangement Tools
+8. Print Settings & Calibration
+
+## Stack
+React + Vite + TypeScript + TailwindCSS + PDF-LIB + PDF.js + dnd-kit + Framer Motion + vite-plugin-pwa.
+
+## Development
 ```bash
 npm install
 npm run dev
@@ -26,18 +34,11 @@ npm run build
 npm run preview
 ```
 
-## GitHub Pages
-1. Set repository Pages source to **GitHub Actions**.
-2. Ensure default branch is `main`.
-3. Push to `main`; workflow deploys `dist` automatically.
-4. If repo name is not `BookletCreator`, set `VITE_BASE_PATH` in workflow env.
+## GitHub Pages Deployment
+1. Enable **GitHub Actions** as Pages source.
+2. Push to `main`.
+3. Workflow `.github/workflows/deploy.yml` builds and deploys static `dist`.
+4. `VITE_BASE_PATH` is automatically set to `/${repo-name}/` during CI.
 
-## Print Tips
-1. Choose duplex mode where supported.
-2. Use short-edge or long-edge flip to match your printer.
-3. Fold printed sheets in half and collate signatures.
-
-## Notes
-- All PDF processing runs entirely in the browser.
-- No files leave the device.
-- Vector fidelity is preserved by embedding pages with `pdf-lib`.
+## Privacy
+All PDF processing is done locally in-browser. No upload endpoint, cloud storage, or auth flow is used.
