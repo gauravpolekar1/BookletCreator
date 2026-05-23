@@ -58,19 +58,23 @@ const getSlotPadding = (slotIndex: number, slotsPerSheet: 2 | 4, settings: Bookl
 const drawGuideLines = (sheet: PDFPage, paperW: number, paperH: number, slotsPerSheet: 2 | 4, settings: BookletSettings) => {
   const centerX = paperW / 2;
   const centerY = paperH / 2;
+  const mark = 10;
 
   if (settings.foldGuides) {
-    sheet.drawLine({ start: { x: centerX, y: 0 }, end: { x: centerX, y: paperH }, thickness: 0.7, color: rgb(0.2, 0.4, 0.95), opacity: 0.65 });
+    sheet.drawLine({ start: { x: centerX, y: paperH - mark }, end: { x: centerX, y: paperH - 2 }, thickness: 0.7, color: rgb(0.2, 0.4, 0.95), opacity: 0.7 });
+    sheet.drawLine({ start: { x: centerX, y: 2 }, end: { x: centerX, y: mark }, thickness: 0.7, color: rgb(0.2, 0.4, 0.95), opacity: 0.7 });
   }
 
   if (settings.cutGuides && slotsPerSheet === 4) {
-    sheet.drawLine({ start: { x: 0, y: centerY }, end: { x: paperW, y: centerY }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.65 });
-    sheet.drawLine({ start: { x: centerX, y: 0 }, end: { x: centerX, y: paperH }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.65 });
+    sheet.drawLine({ start: { x: centerX - mark, y: paperH - 2 }, end: { x: centerX + mark, y: paperH - 2 }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+    sheet.drawLine({ start: { x: centerX - mark, y: 2 }, end: { x: centerX + mark, y: 2 }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+    sheet.drawLine({ start: { x: 2, y: centerY - mark }, end: { x: 2, y: centerY + mark }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
+    sheet.drawLine({ start: { x: paperW - 2, y: centerY - mark }, end: { x: paperW - 2, y: centerY + mark }, thickness: 0.7, color: rgb(0.9, 0.2, 0.2), opacity: 0.7 });
   }
 
   if (settings.stitchGuides && slotsPerSheet === 2) {
     [paperH * 0.2, paperH * 0.5, paperH * 0.8].forEach((y) => {
-      sheet.drawLine({ start: { x: centerX - 6, y }, end: { x: centerX + 6, y }, thickness: 0.9, color: rgb(0.05, 0.05, 0.05), opacity: 0.7 });
+      sheet.drawLine({ start: { x: centerX - 4, y }, end: { x: centerX + 4, y }, thickness: 0.9, color: rgb(0.05, 0.05, 0.05), opacity: 0.7 });
     });
   }
 };
