@@ -7,12 +7,6 @@ export const PreviewGrid = ({ spreads, currentSheet, onSheetChange }: { spreads:
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <button type="button" className="rounded-lg border border-slate-300 px-2 py-1 text-xs" onClick={() => onSheetChange(Math.max(1, currentSheet - 1))}>Previous</button>
-        <div className="text-xs font-medium">Sheet {selected.sheetIndex} / {spreads.length}</div>
-        <button type="button" className="rounded-lg border border-slate-300 px-2 py-1 text-xs" onClick={() => onSheetChange(Math.min(spreads.length, currentSheet + 1))}>Next</button>
-      </div>
-
       <div className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-2 font-medium">Sheet {selected.sheetIndex} (same physical paper)</div>
         <div>Front side: {label(selected.front[0])} | {label(selected.front[1])}</div>
