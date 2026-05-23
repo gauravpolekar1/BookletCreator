@@ -19,13 +19,38 @@ export const BookletPage = () => {
   const [outputPreview, setOutputPreview] = useState<Uint8Array | null>(null);
   const [currentSheet, setCurrentSheet] = useState(1);
   const [downloading, setDownloading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const spreads = useMemo(() => buildSheetSpreads(pageCount, settings), [pageCount, settings]);
   const pagesPerSheet = getSlotsPerSheet(settings.bookletSize) * 2;
 
   useEffect(() => {
-    if (!file) return;
-    generateBookletPdf(file, settings).then(setOutputPreview);
+    let cancelled = false;
+
+    const regeneratePreview = async () => {
+      if (!file) {
+        setOutputPreview(null);
+        return;
+      }
+
+      setPreviewLoading(true);
+      try {
+        const bytes = await generateBookletPdf(file, settings);
+        if (!cancelled) {
+          setOutputPreview(bytes);
+        }
+      } finally {
+        if (!cancelled) {
+          setPreviewLoading(false);
+        }
+      }
+    };
+
+    void regeneratePreview();
+
+    return () => {
+      cancelled = true;
+    };
   }, [file, settings]);
 
   const onFile = async (f: File) => {
@@ -72,7 +97,7 @@ export const BookletPage = () => {
                 <div className="mt-4 text-xs text-slate-500">No uploads. Files stay on-device.</div>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-                <h3 className="mb-2 font-semibold">Booklet Preview Studio</h3>
+                <h3 className="mb-2 font-semibold">Booklet Preview Studio {previewLoading ? "· Updating…" : ""}</h3>
                 <div className="grid gap-3 md:grid-cols-2">
                   <PdfPreview file={file} ariaLabel="input" compact />
                   <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages />
