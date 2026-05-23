@@ -85,33 +85,13 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
   const out = await PDFDocument.create();
 
   let workingDoc = src;
-  if (settings.insertBlankAfterEvery > 0 || settings.insertBlankAfterPages.trim().length > 0) {
-    const rebuilt = await PDFDocument.create();
-    const sourcePages = src.getPages();
-    const copied = await rebuilt.copyPages(src, sourcePages.map((_, i) => i));
-    const explicitAfter = new Set(
-      settings.insertBlankAfterPages
-        .split(',')
-        .map((v) => Number(v.trim()))
-        .filter((n) => Number.isFinite(n) && n > 0)
-    );
+  const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
 
-    copied.forEach((pg, index) => {
-      const pageNumber = index + 1;
-      rebuilt.addPage(pg);
-      const cadenceMatch = settings.insertBlankAfterEvery > 0 && pageNumber % settings.insertBlankAfterEvery === 0;
-      const explicitMatch = explicitAfter.has(pageNumber);
-      if ((cadenceMatch || explicitMatch) && pageNumber !== copied.length) {
-        rebuilt.addPage([pg.getWidth(), pg.getHeight()]);
-      }
-    });
-    workingDoc = rebuilt;
-  }
 
   const pages = workingDoc.getPages();
   const spreads = buildSheetSpreads(pages.length, settings);
   const [paperW, paperH] = getPaperDimensions(settings.paperSize, settings.outputOrientation);
-  const slotsPerSheet = getSlotsPerSheet(settings.bookletSize);
+
 
   const embeddedPages = await out.embedPages(pages);
 
@@ -135,6 +115,23 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
 
   const drawSlot = (sheet: PDFPage, pageNum: number | null, slot: Slot, slotIndex: number) => {
     if (pageNum === null) return;
+
+    // --- ADD THIS BLOCK TO DYNAMICALLY FORCE SLOTS BLANK ---
+    const explicitAfter = new Set(
+      settings.insertBlankAfterPages
+        .split(',')
+        .map((v) => Number(v.trim()))
+        .filter((n) => Number.isFinite(n) && n > 0)
+    );
+
+    const cadenceMatch = settings.insertBlankAfterEvery > 0 && pageNum % settings.insertBlankAfterEvery === 0;
+    const explicitMatch = explicitAfter.has(pageNum);
+
+    // If this specific slot index should remain empty, exit here!
+    if (cadenceMatch || explicitMatch) {
+      return;
+    }
+    // -----------------------------------------------------
 
     const pageIndex = pageNum - 1;
     const embed = embeddedPages[pageIndex];
@@ -161,6 +158,7 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
       rotate: rotateForBestFit ? degrees(90) : undefined
     });
   };
+
 
   for (const spread of spreads) {
     if (slotsPerSheet === 4) continue;
