@@ -30,6 +30,7 @@ export interface BookletSettings {
   cutGuides: boolean;
   stitchGuides: boolean;
   insertBlankAfterEvery: number;
+  insertBlankAfterPages: string;
 }
 
 

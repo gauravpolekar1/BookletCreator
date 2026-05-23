@@ -85,13 +85,23 @@ export const generateBookletPdf = async (file: File, settings: BookletSettings):
   const out = await PDFDocument.create();
 
   let workingDoc = src;
-  if (settings.insertBlankAfterEvery > 0) {
+  if (settings.insertBlankAfterEvery > 0 || settings.insertBlankAfterPages.trim().length > 0) {
     const rebuilt = await PDFDocument.create();
     const sourcePages = src.getPages();
     const copied = await rebuilt.copyPages(src, sourcePages.map((_, i) => i));
+    const explicitAfter = new Set(
+      settings.insertBlankAfterPages
+        .split(',')
+        .map((v) => Number(v.trim()))
+        .filter((n) => Number.isFinite(n) && n > 0)
+    );
+
     copied.forEach((pg, index) => {
+      const pageNumber = index + 1;
       rebuilt.addPage(pg);
-      if ((index + 1) % settings.insertBlankAfterEvery === 0 && index !== copied.length - 1) {
+      const cadenceMatch = settings.insertBlankAfterEvery > 0 && pageNumber % settings.insertBlankAfterEvery === 0;
+      const explicitMatch = explicitAfter.has(pageNumber);
+      if ((cadenceMatch || explicitMatch) && pageNumber !== copied.length) {
         rebuilt.addPage([pg.getWidth(), pg.getHeight()]);
       }
     });

@@ -9,7 +9,7 @@ import { buildSheetSpreads } from '../utils/imposition';
 import { getSlotsPerSheet } from '../utils/layout';
 import { generateBookletPdf, loadPdf } from '../utils/pdf';
 
-const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true, insertBlankAfterEvery: 0 };
+const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true, insertBlankAfterEvery: 0, insertBlankAfterPages: "" };
 
 export const BookletPage = () => {
   const [activeTool, setActiveTool] = useState<ToolId>('booklet');
@@ -109,6 +109,17 @@ export const BookletPage = () => {
                 <option value={4}>After every 4 pages</option>
                 <option value={8}>After every 8 pages</option>
               </select>
+
+
+              <h4 className="mt-3 font-semibold">Insert blank after specific pages</h4>
+              <input
+                type="text"
+                value={settings.insertBlankAfterPages}
+                onChange={(e) => setSettings((v) => ({ ...v, insertBlankAfterPages: e.target.value }))}
+                placeholder="Example: 2, 7, 11"
+                className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950"
+              />
+              <p className="mt-1 text-xs text-slate-500">Adds one blank page immediately after each listed page number.</p>
 
               <h4 className="mt-4 font-semibold">Guided production lines</h4>
               <div className="mt-2 space-y-2">
