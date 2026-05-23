@@ -15,7 +15,7 @@ export const BookletPage = () => {
   const [activeTool, setActiveTool] = useState<ToolId>('booklet');
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
-  const [settings] = useState<BookletSettings>(defaults);
+  const [settings, setSettings] = useState<BookletSettings>(defaults);
   const [outputPreview, setOutputPreview] = useState<Uint8Array | null>(null);
 
   const spreads = useMemo(() => buildSheetSpreads(pageCount, settings), [pageCount, settings]);
@@ -32,46 +32,76 @@ export const BookletPage = () => {
     setPageCount(pdf.getPageCount());
   };
 
+  const updateMargin = (key: keyof BookletSettings['margins'], value: number) => {
+    setSettings((current) => ({ ...current, margins: { ...current.margins, [key]: Math.max(0, value) } }));
+  };
+
   return (
     <>
       <section className="mx-auto max-w-7xl px-4 pt-8 md:px-8">
         <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white shadow-xl">
           <h2 className="text-3xl font-bold md:text-4xl">Print PDFs Like Real Books</h2>
           <p className="mt-3 max-w-3xl text-blue-100">Create booklets, signatures, zines, folded layouts, and print-ready documents entirely in your browser.</p>
-          <div className="mt-6 flex flex-wrap gap-3"><button className="rounded-xl bg-white px-4 py-2 font-semibold text-blue-700">Start Creating</button><button className="rounded-xl border border-white/50 px-4 py-2">View Demo</button><a className="rounded-xl border border-white/50 px-4 py-2" href="https://github.com" target="_blank">GitHub</a></div>
-          <div className="mt-6 grid gap-3 text-sm md:grid-cols-4"><div>🔒 Privacy-first</div><div>💻 100% client-side</div><div>📴 Works offline</div><div>🖨️ Designed for printing</div></div>
         </div>
       </section>
       <Shell active={activeTool} onSelect={setActiveTool}>
         <motion.div key={activeTool} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-              <DropzoneUploader onFile={onFile} />
-              <div className="mt-4 text-xs text-slate-500">No uploads. Files stay on-device.</div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-sm font-semibold">Smart print validation</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-700 dark:text-amber-300">
-                {pageCount % 4 !== 0 && <li>Page count is not divisible by 4.</li>}
-                {settings.margins.inner < 6 && <li>Binding margin may be too small.</li>}
-                {settings.outputOrientation === 'landscape' && <li>Landscape layout selected; verify duplex flip direction.</li>}
-              </ul>
-            </div>
-          </div>
-          <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="mb-2 font-semibold">{activeTool === 'booklet' ? 'Booklet Creator' : 'Print Workspace'}</h3>
-              <div className="grid gap-3 md:grid-cols-2">
-                <PdfPreview file={file} ariaLabel="input" compact />
-                <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages />
+          <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                <DropzoneUploader onFile={onFile} />
+                <div className="mt-4 text-xs text-slate-500">No uploads. Files stay on-device.</div>
               </div>
-              <PreviewGrid spreads={spreads} />
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                <h3 className="mb-2 font-semibold">Booklet Preview Studio</h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <PdfPreview file={file} ariaLabel="input" compact />
+                  <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages />
+                </div>
+                <div className="mt-3">
+                  <PreviewGrid spreads={spreads} />
+                </div>
+              </div>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-              <h4 className="font-semibold">Settings & Education</h4>
-              <p className="mt-2 text-slate-500">Sheet 1 example: Front → [32][1] | Back → [2][31]</p>
-              <p className="mt-2">Pages: {pageCount} · {pagesPerSheet} pages/sheet · Signature: {settings.signatures}</p>
-              <p className="mt-2">Duplex assistant: choose <strong>{settings.duplexFlip}</strong>-edge flip to avoid upside-down backs.</p>
+              <h4 className="font-semibold">Output paper size</h4>
+              <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" value={settings.paperSize} onChange={(e) => setSettings((s) => ({ ...s, paperSize: e.target.value as BookletSettings['paperSize'] }))}>
+                <option value="A4">A4</option>
+                <option value="A5">A5</option>
+                <option value="A6">A6</option>
+                <option value="Letter">Letter</option>
+              </select>
+
+              <h4 className="mt-4 font-semibold">Output orientation</h4>
+              <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" value={settings.outputOrientation} onChange={(e) => setSettings((s) => ({ ...s, outputOrientation: e.target.value as BookletSettings['outputOrientation'] }))}>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+
+              <h4 className="mt-4 font-semibold">Pages per sheet</h4>
+              <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" value={settings.bookletSize} onChange={(e) => setSettings((s) => ({ ...s, bookletSize: e.target.value as BookletSettings['bookletSize'] }))}>
+                <option value="A5">2 pages per sheet (A5)</option>
+                <option value="A6">4 pages per sheet (A6)</option>
+              </select>
+
+              <h4 className="mt-4 font-semibold">Print mode</h4>
+              <select className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" value={settings.printMode} onChange={(e) => setSettings((s) => ({ ...s, printMode: e.target.value as BookletSettings['printMode'] }))}>
+                <option value="duplex">Double-sided</option>
+                <option value="single">Single-sided</option>
+              </select>
+
+              <h4 className="mt-4 font-semibold">Margins (mm)</h4>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <input type="number" min={0} value={settings.margins.inner} onChange={(e) => updateMargin('inner', Number(e.target.value))} className="rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Inner" />
+                <input type="number" min={0} value={settings.margins.outer} onChange={(e) => updateMargin('outer', Number(e.target.value))} className="rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Outer" />
+                <input type="number" min={0} value={settings.margins.top} onChange={(e) => updateMargin('top', Number(e.target.value))} className="rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Top" />
+                <input type="number" min={0} value={settings.margins.bottom} onChange={(e) => updateMargin('bottom', Number(e.target.value))} className="rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" placeholder="Bottom" />
+              </div>
+
+              <h4 className="mt-4 font-semibold">Gutter (mm)</h4>
+              <input type="number" min={0} value={settings.gutter} onChange={(e) => setSettings((s) => ({ ...s, gutter: Math.max(0, Number(e.target.value)) }))} className="mt-2 w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-950" />
+
+              <p className="mt-4 text-xs text-slate-500">Pages: {pageCount} · {pagesPerSheet} pages/sheet · Duplex: {settings.duplexFlip}-edge.</p>
             </div>
           </div>
         </motion.div>
