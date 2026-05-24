@@ -2,6 +2,7 @@
 
 Premium, privacy-first print layout studio for physical PDF workflows. The app runs **100% in your browser**, supports booklet/signature/zine use-cases, and is deployable directly to GitHub Pages.
 
+You can access it from  [https://gauravpolekar1.github.io/BookletCreator/](https://gauravpolekar1.github.io/BookletCreator/)
 ## Core Positioning
 - Files never leave your browser
 - 100% client-side processing (no backend)
