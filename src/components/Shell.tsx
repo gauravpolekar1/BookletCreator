@@ -1,14 +1,7 @@
 import { ToolId } from '../types/booklet';
 
 const tools: { id: ToolId; label: string }[] = [
-  { id: 'booklet', label: 'Booklet Creator' },
-  { id: 'nup', label: 'N-Up Printing' },
-  { id: 'signatures', label: 'Signature Generator' },
-  { id: 'zine', label: 'Zine Creator' },
-  { id: 'preview', label: 'Print Preview Studio' },
-  { id: 'duplex', label: 'Duplex Assistant' },
-  { id: 'arrange', label: 'Page Arrangement' },
-  { id: 'calibration', label: 'Calibration' }
+  { id: 'booklet', label: 'Booklet Creator' }
 ];
 
 export const Shell = ({ active, onSelect, children }: { active: ToolId; onSelect: (tool: ToolId) => void; children: React.ReactNode }) => (

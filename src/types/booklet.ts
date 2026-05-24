@@ -46,11 +46,4 @@ export interface SheetSpread {
 }
 
 export type ToolId =
-  | 'booklet'
-  | 'nup'
-  | 'signatures'
-  | 'zine'
-  | 'preview'
-  | 'duplex'
-  | 'arrange'
-  | 'calibration';
+  | 'booklet';

@@ -11,13 +11,6 @@ Premium, privacy-first print layout studio for physical PDF workflows. The app r
 
 ## Modules
 1. Booklet Creator (flagship)
-2. N-Up Printing
-3. Signature Generator
-4. Zine Creator
-5. Print Preview Studio
-6. Duplex Printing Assistant
-7. Page Arrangement Tools
-8. Print Settings & Calibration
 
 ## Stack
 React + Vite + TypeScript + TailwindCSS + PDF-LIB + PDF.js + dnd-kit + Framer Motion + vite-plugin-pwa.
