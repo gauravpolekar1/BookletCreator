@@ -123,46 +123,46 @@ export const BookletPage = () => {
         </section>
 
         <section id="how-it-works" className="space-y-4">
-          <h2 className="text-3xl font-semibold">How booklet imposition works</h2>
-          <div className="grid gap-4 md:grid-cols-5">{workflow.map((step, i) => <motion.article whileHover={{ y: -4 }} key={step} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs text-slate-500">Step {i + 1}</p><h3 className="mt-2 font-semibold">{step}</h3></motion.article>)}</div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="font-semibold">Real sheet example</h3><p className="mt-2 text-sm text-slate-600">Sheet Front: [16][1] · Sheet Back: [2][15]</p></div>
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">How booklet imposition works</h2>
+          <div className="grid gap-4 md:grid-cols-5">{workflow.map((step, i) => <motion.article whileHover={{ y: -4 }} key={step} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"><p className="text-xs text-slate-500">Step {i + 1}</p><h3 className="mt-2 font-semibold">{step}</h3></motion.article>)}</div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"><h3 className="font-semibold">Real sheet example</h3><p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Sheet Front: [16][1] · Sheet Back: [2][15]</p></div>
         </section>
 
-        <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6">
+        <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-900/70 dark:bg-emerald-950/30">
           <h2 className="text-3xl font-semibold text-emerald-900">Your PDFs Never Leave Your Device</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">{['100% browser processing', 'No uploads or account required', 'Works offline on GitHub Pages'].map((item) => <div key={item} className="rounded-xl bg-white p-4 text-sm text-emerald-900 shadow-sm">🛡️ {item}</div>)}</div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">{['100% browser processing', 'No uploads or account required', 'Works offline on GitHub Pages'].map((item) => <div key={item} className="rounded-xl bg-white p-4 text-sm text-emerald-900 shadow-sm dark:bg-slate-900 dark:text-emerald-200">🛡️ {item}</div>)}</div>
         </section>
 
         <section>
-          <h2 className="text-3xl font-semibold">Premium print workflow tools</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{features.map(([title, description]) => <motion.article whileHover={{ y: -5 }} key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-3 inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold">📄 {title}</div><p className="text-sm text-slate-600">{description}</p></motion.article>)}</div>
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Premium print workflow tools</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{features.map(([title, description]) => <motion.article whileHover={{ y: -5 }} key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="mb-3 inline-flex rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold dark:bg-slate-800 dark:text-slate-100">📄 {title}</div><p className="text-sm text-slate-600 dark:text-slate-300">{description}</p></motion.article>)}</div>
         </section>
 
-        <section className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 lg:grid-cols-2">
-          <div><h2 className="text-3xl font-semibold">Never Get Duplex Printing Wrong Again</h2><p className="mt-3 text-slate-600">Visual long-edge and short-edge guidance with troubleshooting hints for portrait and landscape printers.</p></div>
-          <motion.div animate={{ rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity }} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700">Long-edge flip: best for portrait booklets.<br />Short-edge flip: useful for calendar-style or landscape flips.</motion.div>
+        <section className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-2">
+          <div><h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Never Get Duplex Printing Wrong Again</h2><p className="mt-3 text-slate-600">Visual long-edge and short-edge guidance with troubleshooting hints for portrait and landscape printers.</p></div>
+          <motion.div animate={{ rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity }} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">Long-edge flip: best for portrait booklets.<br />Short-edge flip: useful for calendar-style or landscape flips.</motion.div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6">
-          <h2 className="text-3xl font-semibold">Create Printable Zines from PDFs</h2>
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Create Printable Zines from PDFs</h2>
           <p className="mt-2 text-slate-600">Turn any PDF into foldable mini-books and DIY zines directly in your browser. Great for a zine maker workflow, printable zines, foldable booklet design, DIY booklet printing, mini booklet creator projects, and print zine from PDF output.</p>
           <h3 className="mt-4 text-xl font-semibold">What Is a Zine?</h3>
           <p className="mt-2 text-slate-600">A zine is a small self-published booklet, often folded from a single sheet or short signature sets.</p>
         </section>
 
         <section>
-          <h2 className="text-3xl font-semibold">Use cases</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{['Student Notes', 'Exam Booklets', 'Indie Comics', 'Tabletop RPG Manuals', 'Church Handouts', 'Pocket Guides', 'Manga Printing', 'DIY Publishing'].map((item) => <div key={item} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">✦ {item}</div>)}</div>
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Use cases</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{['Student Notes', 'Exam Booklets', 'Indie Comics', 'Tabletop RPG Manuals', 'Church Handouts', 'Pocket Guides', 'Manga Printing', 'DIY Publishing'].map((item) => <div key={item} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">✦ {item}</div>)}</div>
         </section>
 
-        <section className="overflow-x-auto rounded-3xl border border-slate-200 bg-white p-6">
-          <h2 className="text-3xl font-semibold">Why BookletCreator</h2>
-          <table className="mt-4 min-w-full text-left text-sm"><thead><tr className="border-b"><th className="py-2">Capability</th><th>BookletCreator</th><th>Generic PDF Tools</th></tr></thead><tbody>{['Browser-only processing', 'Booklet specialization', 'Duplex guidance', 'Fold visualizations', 'Offline support', 'Privacy-first workflow'].map((row) => <tr className="border-b" key={row}><td className="py-2">{row}</td><td>✓</td><td>Often missing</td></tr>)}</tbody></table>
+        <section className="overflow-x-auto rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">Why BookletCreator</h2>
+          <table className="mt-4 min-w-full text-left text-sm text-slate-700 dark:text-slate-200"><thead><tr className="border-b border-slate-200 dark:border-slate-800"><th className="py-2">Capability</th><th>BookletCreator</th><th>Generic PDF Tools</th></tr></thead><tbody>{['Browser-only processing', 'Booklet specialization', 'Duplex guidance', 'Fold visualizations', 'Offline support', 'Privacy-first workflow'].map((row) => <tr className="border-b border-slate-200 dark:border-slate-800" key={row}><td className="py-2">{row}</td><td>✓</td><td>Often missing</td></tr>)}</tbody></table>
         </section>
 
         <section>
-          <h2 className="text-3xl font-semibold">FAQ</h2>
-          <div className="mt-4 space-y-3">{faqs.map(([q, a]) => <details key={q} className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer font-semibold">{q}</summary><p className="mt-2 text-sm text-slate-600">{a}</p></details>)}</div>
+          <h2 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">FAQ</h2>
+          <div className="mt-4 space-y-3">{faqs.map(([q, a]) => <details key={q} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><summary className="cursor-pointer font-semibold">{q}</summary><p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{a}</p></details>)}</div>
         </section>
       </main>
 
