@@ -179,7 +179,7 @@ export const BookletPage = () => {
                 <h3 className="mb-2 font-semibold">Booklet Preview Studio {previewLoading ? "· Updating…" : ""}</h3>
                 <div className="grid gap-3 md:grid-cols-2">
                   <PdfPreview file={file} ariaLabel="input" compact />
-                  <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages />
+                  <PdfPreview bytes={outputPreview} ariaLabel="output" showAllPages layout="scroll" />
                 </div>
                 <div className="mt-3">
                   <PreviewGrid spreads={spreads} currentSheet={currentSheet} onSheetChange={setCurrentSheet} />

@@ -10,6 +10,7 @@ interface PdfPreviewProps {
   ariaLabel?: string;
   showAllPages?: boolean;
   compact?: boolean;
+  layout?: 'grid' | 'scroll';
 }
 
 export const PdfPreview = ({
@@ -17,7 +18,8 @@ export const PdfPreview = ({
   bytes = null,
   ariaLabel = 'PDF first page preview',
   showAllPages = false,
-  compact = false
+  compact = false,
+  layout = 'grid'
 }: PdfPreviewProps) => {
   const [images, setImages] = useState<string[]>([]);
   const [selectedPage, setSelectedPage] = useState<number | null>(null);
@@ -38,7 +40,7 @@ export const PdfPreview = ({
 
       for (let i = 1; i <= totalPages; i += 1) {
         const page = await doc.getPage(i);
-        const viewport = page.getViewport({ scale: showAllPages ? 0.45 : 0.6 });
+        const viewport = page.getViewport({ scale: showAllPages ? (layout === 'scroll' ? 0.75 : 0.45) : 0.6 });
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         if (!ctx || cancelled) continue;
@@ -65,16 +67,21 @@ export const PdfPreview = ({
   }
 
   const thumbnailClasses = compact ? 'max-w-[120px]' : 'w-full';
+  const containerClasses = showAllPages
+    ? layout === 'scroll'
+      ? 'max-h-[34rem] space-y-3 overflow-y-auto pr-1'
+      : 'grid grid-cols-2 gap-3 md:grid-cols-3'
+    : 'flex';
 
   return (
     <>
-      <div className={showAllPages ? 'grid grid-cols-2 gap-3 md:grid-cols-3' : 'flex'}>
+      <div className={containerClasses}>
         {images.map((src, index) => (
           <button
             key={`${src}-${index}`}
             type="button"
             onClick={() => setSelectedPage(index + 1)}
-            className={`group overflow-hidden rounded-xl border border-slate-200 transition hover:shadow-md dark:border-slate-800 ${thumbnailClasses}`}
+            className={`group overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:shadow-md dark:border-slate-800 dark:bg-slate-950 ${layout === 'scroll' ? 'w-full' : thumbnailClasses}`}
             aria-label={`${ariaLabel} page ${index + 1}`}
           >
             <img src={src} alt={`Preview page ${index + 1}`} className="h-auto w-full" />
