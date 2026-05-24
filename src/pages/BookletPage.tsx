@@ -9,7 +9,7 @@ import { buildSheetSpreads } from '../utils/imposition';
 import { getSlotsPerSheet } from '../utils/layout';
 import { generateBookletPdf, loadPdf } from '../utils/pdf';
 
-const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'portrait', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true, insertBlankAfterEvery: 0, insertBlankAfterPages: '' };
+const defaults: BookletSettings = { paperSize: 'A4', bookletSize: 'A5', printMode: 'duplex', duplexFlip: 'short', margins: { inner: 8, outer: 8, top: 8, bottom: 8 }, gutter: 3, outputOrientation: 'landscape', signatures: 16, rtl: false, saddleStitch: true, coverMode: 'auto', cropMarks: false, bleedMarks: false, printMarks: false, foldGuides: true, cutGuides: false, stitchGuides: true, insertBlankAfterEvery: 0, insertBlankAfterPages: '' };
 
 const workflow = ['Upload PDF', 'Pages Rearranged Automatically', 'Print Double-Sided', 'Fold Sheets', 'Finished Booklet'];
 const features = [
