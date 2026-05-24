@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # Changed to allow lockfile generation
   pages: write
   id-token: write
 
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm install # Changed from 'npm ci' to generate missing lockfile pieces
       - run: npm run build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
