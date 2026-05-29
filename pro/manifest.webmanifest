@@ -1,0 +1,11 @@
+{
+  "name": "BookletCreator Pro",
+  "short_name": "BC Pro",
+  "description": "Privacy-first print preparation workspace for PDFs.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#2563eb",
+  "icons": []
+}

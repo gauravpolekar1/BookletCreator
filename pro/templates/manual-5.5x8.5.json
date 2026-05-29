@@ -1,0 +1,31 @@
+{
+  "id": "manual-5.5x8.5",
+  "name": "Manual 5.5 \u00d7 8.5",
+  "description": "Starter settings for manual 5.5 \u00d7 8.5 projects.",
+  "pageSize": {
+    "width": "5.5in",
+    "height": "8.5in"
+  },
+  "margins": {
+    "top": 45,
+    "right": 45,
+    "bottom": 45,
+    "left": 45,
+    "unit": "pt"
+  },
+  "defaultFonts": {
+    "body": "Helvetica",
+    "heading": "Helvetica-Bold"
+  },
+  "defaultStyles": {
+    "body": {
+      "fontSize": 11,
+      "lineHeight": 1.35
+    },
+    "heading": {
+      "fontSize": 20,
+      "bold": true
+    }
+  },
+  "sample": "manual-5.5x8.5-sample.md"
+}
