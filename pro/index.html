@@ -92,22 +92,34 @@
           </section>
 
           <section class="tab-panel" id="tab-imposition" data-tab-panel="imposition" tabindex="-1">
-            <div class="panel-heading"><p class="eyebrow">Deferred</p><h1>Imposition</h1><p>Phase 2 will add saddle stitch, perfect bound signatures, brochures, and N-up output.</p></div>
+            <div class="panel-heading"><p class="eyebrow">Imposition</p><h1>Impose pages for print</h1><p>Choose a production mode, set signature or grid options, and generate an imposed PDF locally.</p></div>
+            <article class="card form-stack">
+              <label for="imposition-mode">Mode</label>
+              <select id="imposition-mode"><option value="saddle-stitch">Saddle stitch</option><option value="perfect-bound">Perfect-bound signatures</option><option value="bi-fold">Bi-fold brochure</option><option value="tri-fold">Tri-fold brochure</option><option value="n-up">N-up grid</option></select>
+              <div class="grid two-col"><label>Signature pages <input id="signature-size" type="number" min="4" step="4" value="16" /></label><label>N-up columns <input id="nup-columns" type="number" min="1" max="4" value="2" /></label><label>N-up rows <input id="nup-rows" type="number" min="1" max="4" value="2" /></label><label class="checkbox-row"><input id="cut-stack" type="checkbox" /> Cut-and-stack ordering</label></div>
+              <div class="button-row"><button id="run-imposition" type="button">Generate imposed PDF</button><a id="download-imposed" class="button secondary is-disabled" aria-disabled="true">Download imposed PDF</a></div>
+              <p id="imposition-status" class="muted">Upload a source PDF first.</p>
+            </article>
           </section>
           <section class="tab-panel" id="tab-print-prep" data-tab-panel="print-prep" tabindex="-1">
-            <div class="panel-heading"><p class="eyebrow">Deferred</p><h1>Print prep</h1><p>Phase 3 will add bleed, marks, spine calculation, grayscale conversion, and preflight reporting.</p></div>
+            <div class="panel-heading"><p class="eyebrow">Print prep</p><h1>Prepare files for the print shop</h1><p>Add bleed and marks, calculate spine width, and run local preflight checks.</p></div>
+            <div class="grid two-col"><article class="card form-stack"><label>Bleed <input id="bleed-value" type="number" min="0" step="0.1" value="3" /></label><label class="checkbox-row"><input id="crop-marks" type="checkbox" checked /> Crop marks</label><label class="checkbox-row"><input id="fold-marks" type="checkbox" /> Fold marks</label><button id="apply-print-prep" type="button">Apply print prep</button><a id="download-prepped" class="button secondary is-disabled" aria-disabled="true">Download prepped PDF</a></article><article class="card form-stack"><h2>Spine calculator</h2><label>Page count <input id="spine-pages" type="number" min="0" value="0" /></label><label>Paper GSM <input id="spine-gsm" type="number" min="40" value="80" /></label><label>Paper type <select id="spine-type"><option value="offset">Offset</option><option value="bond">Bond</option><option value="coated">Coated</option></select></label><button id="calculate-spine" type="button">Calculate spine</button><p id="spine-result" class="muted">Enter page count and paper details.</p></article></div><article class="card"><div class="button-row"><button id="run-preflight" type="button">Run preflight</button><button id="download-preflight" type="button" class="secondary">Download report</button></div><div id="preflight-report" class="report-box">Preflight results appear here.</div></article>
           </section>
           <section class="tab-panel" id="tab-layout" data-tab-panel="layout" tabindex="-1">
-            <div class="panel-heading"><p class="eyebrow">Deferred</p><h1>Layout</h1><p>Phase 4 will add page numbers, headers, footers, TOC, gutter adjustments, and watermarks.</p></div>
+            <div class="panel-heading"><p class="eyebrow">Layout</p><h1>Apply layout finishing</h1><p>Add page numbers, running headers, a TOC page, gutter shift, and watermarks.</p></div>
+            <article class="card form-stack"><div class="grid two-col"><label class="checkbox-row"><input id="layout-page-numbers" type="checkbox" checked /> Page numbers</label><label>Number style <select id="page-number-style"><option value="1">1</option><option value="1/N">1/N</option><option value="Page 1 of N">Page 1 of N</option><option value="roman">roman</option></select></label><label>Header <input id="header-template" value="{title}" /></label><label>Footer <input id="footer-template" value="Page {page} of {total}" /></label><label>Watermark <input id="watermark-text" value="Draft" /></label><label>Gutter <input id="gutter-value" type="number" min="0" step="0.1" value="0" /></label></div><label class="checkbox-row"><input id="insert-toc" type="checkbox" /> Insert simple TOC page</label><button id="apply-layout" type="button">Apply layout</button><a id="download-layout" class="button secondary is-disabled" aria-disabled="true">Download layout PDF</a><p id="layout-status" class="muted">Layout changes are applied to the current source PDF.</p></article>
           </section>
           <section class="tab-panel" id="tab-cover" data-tab-panel="cover" tabindex="-1">
-            <div class="panel-heading"><p class="eyebrow">Deferred</p><h1>Cover</h1><p>Phase 6 will add the Fabric.js cover designer.</p></div>
+            <div class="panel-heading"><p class="eyebrow">Cover</p><h1>Design a wrap cover</h1><p>Use the Fabric.js canvas to compose back, spine, and front cover artwork.</p></div>
+            <article class="card form-stack"><div class="button-row"><button id="init-cover" type="button">Open cover designer</button><select id="cover-template" aria-label="Cover template"></select><button id="cover-add-text" type="button" class="secondary">Add text</button><button id="cover-export" type="button" class="secondary">Export cover PDF</button></div><canvas id="cover-canvas" width="900" height="420" aria-label="Cover designer canvas"></canvas><a id="download-cover" class="button secondary is-disabled" aria-disabled="true">Download cover PDF</a></article>
           </section>
           <section class="tab-panel" id="tab-preview" data-tab-panel="preview" tabindex="-1">
-            <div class="panel-heading"><p class="eyebrow">Deferred</p><h1>Preview</h1><p>Phase 7 will add flipbook preview.</p></div>
+            <div class="panel-heading"><p class="eyebrow">Preview</p><h1>Flipbook preview</h1><p>Render the current PDF as browser canvases and use PageFlip when the CDN library is available.</p></div>
+            <article class="card"><div class="button-row"><button id="render-flipbook" type="button">Render flipbook</button><button id="preview-fullscreen" type="button" class="secondary">Full screen</button></div><div id="flipbook-container" class="flipbook-container" aria-live="polite"></div></article>
           </section>
           <section class="tab-panel" id="tab-export" data-tab-panel="export" tabindex="-1">
-            <div class="panel-heading"><p class="eyebrow">Deferred</p><h1>Export</h1><p>Final PDF download and batch mode are scheduled after imposition and print-prep features exist.</p></div>
+            <div class="panel-heading"><p class="eyebrow">Export</p><h1>Download and batch process</h1><p>Download the latest generated PDF or batch multiple PDFs through a selected preset.</p></div>
+            <article class="card form-stack"><label>File naming pattern <input id="file-pattern" value="{title}_{date}_{pages}p_{mode}.pdf" /></label><div class="button-row"><button id="download-current" type="button">Download current PDF</button><input id="batch-files" type="file" accept="application/pdf,.pdf" multiple /><button id="run-batch" type="button" class="secondary">Batch ZIP</button></div><progress id="batch-progress" value="0" max="100"></progress><p id="export-status" class="muted">Generated files never leave the browser.</p></article>
           </section>
           <section class="tab-panel" id="tab-projects" data-tab-panel="projects" tabindex="-1">
             <div class="panel-heading"><p class="eyebrow">Phase 1 foundation</p><h1>Projects</h1><p>Saved settings and metadata are stored locally in IndexedDB.</p></div>
@@ -134,6 +146,15 @@
     </div>
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/14.1.0/markdown-it.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
+    <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script type="module" src="./js/app.js"></script>
   </body>
 </html>
