@@ -34,12 +34,17 @@ export function getDatabase() {
 export async function saveProject(snapshot) {
   const database = await getDatabase()
   const now = new Date().toISOString()
+  const projectId = snapshot.project?.id || crypto.randomUUID()
+  const createdAt = snapshot.project?.createdAt || now
   const record = {
     ...snapshot,
+    id: projectId,
+    createdAt,
+    updatedAt: now,
     project: {
       ...snapshot.project,
-      id: snapshot.project?.id || crypto.randomUUID(),
-      createdAt: snapshot.project?.createdAt || now,
+      id: projectId,
+      createdAt,
       updatedAt: now
     }
   }
