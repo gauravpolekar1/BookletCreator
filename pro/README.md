@@ -1,6 +1,6 @@
 # BookletCreator Pro
 
-BookletCreator Pro is a separate, static, privacy-first workspace that lives beside the classic BookletCreator page. Phase 1 provides the foundation: tab routing, observable project state, unit selection, PDF ingestion through pdf.js, local IndexedDB persistence, and `.bcproj` project import/export.
+BookletCreator Pro is a separate, static, privacy-first workspace that lives beside the classic BookletCreator page. The current Pro page provides a no-build, client-side print workspace: project state, PDF ingestion, imposition, print prep, layout finishing, cover design, preview, export, projects, presets, profiles, and browser-runnable imposition tests.
 
 ## Local development
 
@@ -19,7 +19,7 @@ The page uses vanilla ES modules and pinned CDN libraries documented in `DEPENDE
 - `css/components.css` defines reusable controls, cards, tabs, the upload zone, and toast notifications.
 - `js/state.js` is the central observable state store and unit conversion source of truth.
 - `js/storage.js` wraps IndexedDB through `idb` for project persistence.
-- `js/app.js` wires routing, PDF ingestion, project import/export, and rendering.
+- `js/app.js` wires routing, PDF ingestion, print-workflow actions, project import/export, and rendering.
 
 ## Adding a new template
 
@@ -34,7 +34,7 @@ The page uses vanilla ES modules and pinned CDN libraries documented in `DEPENDE
    - `defaultStyles`
    - `sample`
 4. Add a matching sample Markdown file if the template needs first-run content.
-5. When Phase 5 lands, register or load the template through `js/content-in/templates.js`.
+5. Add the filename to `templateFiles` in `js/content-in/templates.js` so the Start/content-in workflow can load it.
 
 ## Adding a new imposition mode
 
@@ -47,12 +47,12 @@ The page uses vanilla ES modules and pinned CDN libraries documented in `DEPENDE
    }
    ```
 
-3. Register the mode in `js/app.js` once Phase 2 routing and processing controls are implemented.
-4. Add browser-runnable tests under `pro/tests/` when the imposition test harness is introduced in Phase 2.
+3. Register the mode in the mode runner map in `js/app.js`.
+4. Add browser-runnable tests under `pro/tests/` using the inline harness.
 
 ## Adding a new print shop profile
 
-1. Add profile data in `pro/js/workflow/profiles.js` once Phase 7 is active.
+1. Add profile data in `pro/js/workflow/profiles.js`.
 2. Include sheet size, bleed, marks style, color mode, and file naming pattern.
 3. Link to the print shop's published specification in a code comment.
 4. Keep custom profiles local to IndexedDB; do not add telemetry or account requirements.
@@ -61,14 +61,15 @@ The page uses vanilla ES modules and pinned CDN libraries documented in `DEPENDE
 
 Implemented in v0.1.0:
 
-- Phase 1 central observable project state.
-- Phase 1 IndexedDB project save/load/list/delete.
-- Phase 1 `.bcproj` import/export with optional embedded PDF bytes.
-- Phase 1 unit toggle shared across UI rendering.
-- Phase 1 tabbed shell with hash routing and last-tab persistence.
-- Phase 1 source PDF ingestion, metadata extraction, and first-page preview.
-- Persistent privacy badge.
+- Phase 1 central observable project state, IndexedDB storage, `.bcproj` import/export, unit toggle, tab shell, source PDF ingestion, and privacy badge.
+- Phase 2 imposition modules for saddle stitch, perfect-bound signatures, bi-fold, tri-fold, and N-up.
+- Phase 3 print-prep modules for bleed, print marks, spine calculation, grayscale passthrough, and preflight reporting.
+- Phase 4 layout modules for page numbers, headers/footers, TOC insertion, gutter shift, and watermarks.
+- Phase 5 content-in modules and bundled templates with sample Markdown.
+- Phase 6 Fabric.js cover-designer integration.
+- Phase 7 PageFlip preview, presets, profiles, batch ZIP export, and file naming.
+- Phase 8 PWA manifest/service worker, responsive UI, ARIA labels, and keyboard-accessible controls.
 
 Deferred by design:
 
-- Phases 2–8 feature implementations. Their folders and placeholder files exist so future work can proceed without moving code, but this iteration stops after Phase 1 as requested.
+- Advanced production-grade analysis such as true embedded image DPI extraction, transparency introspection, and fully rasterized grayscale conversion are represented by safe client-side baseline implementations and can be deepened without changing the no-build architecture.

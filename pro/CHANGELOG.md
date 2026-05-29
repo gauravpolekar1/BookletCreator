@@ -5,6 +5,7 @@
 ### Added
 
 - Created the standalone `/pro/` BookletCreator Pro page.
-- Added a privacy-first Phase 1 foundation with tab routing, project state, unit selection, PDF ingestion, first-page preview, IndexedDB project storage, and `.bcproj` import/export.
-- Added pinned dependency documentation.
-- Added the full planned Pro folder skeleton for future phases.
+- Added a privacy-first foundation with tab routing, project state, unit selection, PDF ingestion, first-page preview, IndexedDB project storage, and `.bcproj` import/export.
+- Added functional imposition, print prep, layout, content-in, cover designer, preview, export, project, preset, and profile modules.
+- Added browser-runnable imposition tests in `/pro/tests/`.
+- Added pinned dependency documentation and PWA/offline metadata.

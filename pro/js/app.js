@@ -11,6 +11,24 @@ import {
   updateState
 } from './state.js'
 import { deleteProject, listProjects, loadProject, saveProject } from './storage.js'
+import { impose as imposeSaddle } from './imposition/saddle-stitch.js'
+import { impose as imposePerfectBound } from './imposition/perfect-bound.js'
+import { impose as imposeBiFold } from './imposition/bi-fold.js'
+import { impose as imposeTriFold } from './imposition/tri-fold.js'
+import { impose as imposeNUp } from './imposition/n-up.js'
+import { addBleed } from './print-prep/bleed.js'
+import { addPrintMarks } from './print-prep/marks.js'
+import { calculateSpineWidth } from './print-prep/spine-calc.js'
+import { runPreflight, createPreflightReport } from './print-prep/preflight.js'
+import { addPageNumbers } from './layout/page-numbers.js'
+import { addHeadersFooters } from './layout/headers-footers.js'
+import { applyGutter } from './layout/gutter.js'
+import { insertToc } from './layout/toc.js'
+import { addWatermark } from './layout/watermark.js'
+import { initCoverDesigner, listCoverTemplates } from './cover-designer/designer.js'
+import { createFlipbook } from './preview/flipbook.js'
+import { processBatch } from './workflow/batch.js'
+import { formatFileName } from './workflow/profiles.js'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs'
 
@@ -26,6 +44,8 @@ const tabs = [
 ]
 
 const elements = {}
+const generated = { imposed: null, prepped: null, layout: null, cover: null, preflight: null }
+let coverDesigner = null
 
 /**
  * Boots the Pro single-page application.
@@ -38,6 +58,8 @@ function init() {
   restoreInitialTab()
   subscribe(render)
   void renderProjects()
+  populateCoverTemplates()
+  registerServiceWorker()
 }
 
 function cacheElements() {
@@ -61,7 +83,53 @@ function cacheElements() {
     previewStatus: document.querySelector('#preview-status'),
     toggleInspector: document.querySelector('#toggle-inspector'),
     inspector: document.querySelector('.inspector'),
-    toastRegion: document.querySelector('#toast-region')
+    toastRegion: document.querySelector('#toast-region'),
+    impositionMode: document.querySelector('#imposition-mode'),
+    signatureSize: document.querySelector('#signature-size'),
+    nupColumns: document.querySelector('#nup-columns'),
+    nupRows: document.querySelector('#nup-rows'),
+    cutStack: document.querySelector('#cut-stack'),
+    runImposition: document.querySelector('#run-imposition'),
+    downloadImposed: document.querySelector('#download-imposed'),
+    impositionStatus: document.querySelector('#imposition-status'),
+    bleedValue: document.querySelector('#bleed-value'),
+    cropMarks: document.querySelector('#crop-marks'),
+    foldMarks: document.querySelector('#fold-marks'),
+    applyPrintPrep: document.querySelector('#apply-print-prep'),
+    downloadPrepped: document.querySelector('#download-prepped'),
+    spinePages: document.querySelector('#spine-pages'),
+    spineGsm: document.querySelector('#spine-gsm'),
+    spineType: document.querySelector('#spine-type'),
+    calculateSpine: document.querySelector('#calculate-spine'),
+    spineResult: document.querySelector('#spine-result'),
+    runPreflight: document.querySelector('#run-preflight'),
+    downloadPreflight: document.querySelector('#download-preflight'),
+    preflightReport: document.querySelector('#preflight-report'),
+    layoutPageNumbers: document.querySelector('#layout-page-numbers'),
+    pageNumberStyle: document.querySelector('#page-number-style'),
+    headerTemplate: document.querySelector('#header-template'),
+    footerTemplate: document.querySelector('#footer-template'),
+    watermarkText: document.querySelector('#watermark-text'),
+    gutterValue: document.querySelector('#gutter-value'),
+    insertToc: document.querySelector('#insert-toc'),
+    applyLayout: document.querySelector('#apply-layout'),
+    downloadLayout: document.querySelector('#download-layout'),
+    layoutStatus: document.querySelector('#layout-status'),
+    initCover: document.querySelector('#init-cover'),
+    coverTemplate: document.querySelector('#cover-template'),
+    coverAddText: document.querySelector('#cover-add-text'),
+    coverExport: document.querySelector('#cover-export'),
+    coverCanvas: document.querySelector('#cover-canvas'),
+    downloadCover: document.querySelector('#download-cover'),
+    renderFlipbook: document.querySelector('#render-flipbook'),
+    previewFullscreen: document.querySelector('#preview-fullscreen'),
+    flipbookContainer: document.querySelector('#flipbook-container'),
+    filePattern: document.querySelector('#file-pattern'),
+    downloadCurrent: document.querySelector('#download-current'),
+    batchFiles: document.querySelector('#batch-files'),
+    runBatch: document.querySelector('#run-batch'),
+    batchProgress: document.querySelector('#batch-progress'),
+    exportStatus: document.querySelector('#export-status')
   })
 }
 
@@ -128,6 +196,23 @@ function bindEvents() {
   elements.projectImport.addEventListener('change', (event) => void importSelectedProject(event))
   elements.refreshProjects.addEventListener('click', () => void renderProjects())
   elements.toggleInspector.addEventListener('click', toggleInspector)
+  elements.runImposition.addEventListener('click', () => void runImposition())
+  elements.downloadImposed.addEventListener('click', (event) => downloadGenerated(event, 'imposed'))
+  elements.applyPrintPrep.addEventListener('click', () => void applyPrintPreparation())
+  elements.downloadPrepped.addEventListener('click', (event) => downloadGenerated(event, 'prepped'))
+  elements.calculateSpine.addEventListener('click', calculateSpine)
+  elements.runPreflight.addEventListener('click', runPreflightUi)
+  elements.downloadPreflight.addEventListener('click', () => void downloadPreflightReport())
+  elements.applyLayout.addEventListener('click', () => void applyLayoutUi())
+  elements.downloadLayout.addEventListener('click', (event) => downloadGenerated(event, 'layout'))
+  elements.initCover.addEventListener('click', initCoverUi)
+  elements.coverAddText.addEventListener('click', addCoverText)
+  elements.coverExport.addEventListener('click', () => void exportCoverPdf())
+  elements.downloadCover.addEventListener('click', (event) => downloadGenerated(event, 'cover'))
+  elements.renderFlipbook.addEventListener('click', () => void renderFlipbookUi())
+  elements.previewFullscreen.addEventListener('click', () => elements.flipbookContainer.requestFullscreen?.())
+  elements.downloadCurrent.addEventListener('click', downloadCurrentPdf)
+  elements.runBatch.addEventListener('click', () => void runBatchUi())
 }
 
 function restoreInitialTab() {
@@ -430,6 +515,234 @@ function escapeHtml(value) {
     "'": '&#39;',
     '"': '&quot;'
   })[character])
+}
+
+
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+      console.info('BookletCreator Pro offline cache unavailable', error)
+    })
+  }
+}
+
+function populateCoverTemplates() {
+  elements.coverTemplate.innerHTML = listCoverTemplates().map((template) => `<option value="${template.id}">${template.name}</option>`).join('')
+}
+
+function sourceBytes() {
+  return generated.layout || generated.prepped || generated.imposed || getState().pdf.bytes
+}
+
+async function runImposition() {
+  const bytes = getState().pdf.bytes
+  if (!bytes) {
+    showToast('Upload a PDF before running imposition.', 'error')
+    return
+  }
+  try {
+    elements.impositionStatus.textContent = 'Imposing PDF locally…'
+    const options = {
+      signatureSize: Number(elements.signatureSize.value || 16),
+      columns: Number(elements.nupColumns.value || 2),
+      rows: Number(elements.nupRows.value || 2),
+      cutAndStack: elements.cutStack.checked
+    }
+    const runners = {
+      'saddle-stitch': imposeSaddle,
+      'perfect-bound': imposePerfectBound,
+      'bi-fold': imposeBiFold,
+      'tri-fold': imposeTriFold,
+      'n-up': imposeNUp
+    }
+    generated.imposed = await runners[elements.impositionMode.value](bytes, options)
+    updateState((draft) => {
+      draft.settings.imposition = { mode: elements.impositionMode.value, ...options }
+      return draft
+    })
+    enableDownload(elements.downloadImposed, 'booklet-imposed.pdf')
+    elements.impositionStatus.textContent = `Generated ${formatBytes(generated.imposed.length)} imposed PDF.`
+    showToast('Imposition complete.', 'success')
+  } catch (error) {
+    handleError('Could not impose this PDF.', error)
+    elements.impositionStatus.textContent = 'Imposition failed.'
+  }
+}
+
+async function applyPrintPreparation() {
+  const bytes = sourceBytes()
+  if (!bytes) {
+    showToast('Upload or generate a PDF before print prep.', 'error')
+    return
+  }
+  try {
+    let output = bytes
+    const bleedPt = toPointsUi(Number(elements.bleedValue.value || 0))
+    if (bleedPt) output = await addBleed(output, { bleedPt })
+    if (elements.cropMarks.checked || elements.foldMarks.checked) {
+      output = await addPrintMarks(output, { foldMarks: elements.foldMarks.checked })
+    }
+    generated.prepped = output
+    enableDownload(elements.downloadPrepped, 'booklet-print-prep.pdf')
+    showToast('Print prep complete.', 'success')
+  } catch (error) {
+    handleError('Could not apply print prep.', error)
+  }
+}
+
+function calculateSpine() {
+  const result = calculateSpineWidth({ pageCount: Number(elements.spinePages.value || getState().pdf.pageCount || 0), paperGsm: Number(elements.spineGsm.value || 80), paperType: elements.spineType.value })
+  const unit = getState().unit
+  const value = unit === 'in' ? result.inches : unit === 'pt' ? result.points : result.mm
+  elements.spineResult.textContent = `Estimated spine width: ${value.toFixed(unit === 'pt' ? 1 : 2)} ${unit}`
+}
+
+function runPreflightUi() {
+  generated.preflight = runPreflight(getState().pdf)
+  const items = generated.preflight.issues.length ? generated.preflight.issues : [{ level: 'ok', message: 'No blocking issues found' }]
+  elements.preflightReport.innerHTML = `<ul>${items.map((issue) => `<li><strong>${escapeHtml(issue.level)}</strong>: ${escapeHtml(issue.message)}</li>`).join('')}</ul>`
+  showToast('Preflight report updated.', 'success')
+}
+
+async function downloadPreflightReport() {
+  try {
+    const result = generated.preflight || runPreflight(getState().pdf)
+    const bytes = await createPreflightReport(result)
+    downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'booklet-preflight-report.pdf')
+  } catch (error) {
+    handleError('Could not create preflight report.', error)
+  }
+}
+
+async function applyLayoutUi() {
+  const bytes = sourceBytes()
+  if (!bytes) {
+    showToast('Upload or generate a PDF before layout finishing.', 'error')
+    return
+  }
+  try {
+    let output = bytes
+    if (elements.insertToc.checked) output = await insertToc(output, [{ title: getState().project.title || 'Document', page: 1 }])
+    const gutterPt = toPointsUi(Number(elements.gutterValue.value || 0))
+    if (gutterPt) output = await applyGutter(output, { amountPt: gutterPt })
+    if (elements.layoutPageNumbers.checked) output = await addPageNumbers(output, { style: elements.pageNumberStyle.value, anchor: 'bottom-center' })
+    if (elements.headerTemplate.value || elements.footerTemplate.value) output = await addHeadersFooters(output, { title: getState().project.title, headerTemplate: elements.headerTemplate.value, footerTemplate: elements.footerTemplate.value })
+    if (elements.watermarkText.value) output = await addWatermark(output, { text: elements.watermarkText.value })
+    generated.layout = output
+    enableDownload(elements.downloadLayout, 'booklet-layout.pdf')
+    elements.layoutStatus.textContent = `Generated ${formatBytes(output.length)} layout PDF.`
+    showToast('Layout finishing complete.', 'success')
+  } catch (error) {
+    handleError('Could not apply layout features.', error)
+  }
+}
+
+function initCoverUi() {
+  const template = listCoverTemplates().find((item) => item.id === elements.coverTemplate.value) || listCoverTemplates()[0]
+  coverDesigner = initCoverDesigner(elements.coverCanvas, { background: template.background, title: template.title })
+  if (!coverDesigner) {
+    showToast('Cover designer library is still loading. Try again in a moment.', 'error')
+    return
+  }
+  showToast('Cover designer ready.', 'success')
+}
+
+function addCoverText() {
+  if (!coverDesigner || !window.fabric) {
+    initCoverUi()
+  }
+  if (coverDesigner && window.fabric) {
+    coverDesigner.add(new window.fabric.Textbox('New cover text', { left: 80, top: 80, width: 260, fontSize: 28, fill: '#111827' }))
+  }
+}
+
+async function exportCoverPdf() {
+  try {
+    if (!coverDesigner) initCoverUi()
+    const dataUrl = elements.coverCanvas.toDataURL('image/png')
+    const { PDFDocument } = window.PDFLib
+    const pdf = await PDFDocument.create()
+    const image = await pdf.embedPng(dataUrl)
+    const page = pdf.addPage([elements.coverCanvas.width, elements.coverCanvas.height])
+    page.drawImage(image, { x: 0, y: 0, width: elements.coverCanvas.width, height: elements.coverCanvas.height })
+    generated.cover = await pdf.save()
+    enableDownload(elements.downloadCover, 'booklet-cover.pdf')
+    showToast('Cover PDF exported.', 'success')
+  } catch (error) {
+    handleError('Could not export the cover PDF.', error)
+  }
+}
+
+async function renderFlipbookUi() {
+  const bytes = sourceBytes()
+  if (!bytes) {
+    showToast('Upload or generate a PDF before previewing.', 'error')
+    return
+  }
+  try {
+    elements.flipbookContainer.textContent = 'Rendering pages…'
+    const document = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise
+    await createFlipbook(elements.flipbookContainer, document)
+    showToast('Flipbook preview rendered.', 'success')
+  } catch (error) {
+    handleError('Could not render flipbook preview.', error)
+  }
+}
+
+function downloadCurrentPdf() {
+  const bytes = sourceBytes()
+  if (!bytes) {
+    showToast('Nothing to export yet.', 'error')
+    return
+  }
+  const state = getState()
+  const fileName = formatFileName(elements.filePattern.value, {
+    title: safeFileName(state.project.title || 'booklet'),
+    date: new Date().toISOString().slice(0, 10),
+    pages: state.pdf.pageCount || '0',
+    mode: state.settings.imposition.mode || elements.impositionMode.value
+  })
+  downloadBlob(new Blob([bytes], { type: 'application/pdf' }), fileName)
+}
+
+async function runBatchUi() {
+  const files = [...(elements.batchFiles.files || [])]
+  if (!files.length) {
+    showToast('Choose PDFs for batch processing.', 'error')
+    return
+  }
+  try {
+    elements.batchProgress.value = 0
+    const blob = await processBatch(files, async (file) => imposeSaddle(await file.arrayBuffer(), {}), (progress) => {
+      elements.batchProgress.value = Math.round(progress.current / progress.total * 100)
+      elements.exportStatus.textContent = `Processing ${progress.file} (${progress.current}/${progress.total})`
+    })
+    downloadBlob(blob, 'bookletcreator-pro-batch.zip')
+    elements.exportStatus.textContent = 'Batch ZIP complete.'
+  } catch (error) {
+    handleError('Could not complete batch export.', error)
+  }
+}
+
+function downloadGenerated(event, key) {
+  event.preventDefault()
+  if (!generated[key]) return
+  downloadBlob(new Blob([generated[key]], { type: 'application/pdf' }), event.currentTarget.download || `booklet-${key}.pdf`)
+}
+
+function enableDownload(link, fileName) {
+  link.classList.remove('is-disabled')
+  link.removeAttribute('aria-disabled')
+  link.href = '#download'
+  link.download = fileName
+}
+
+function toPointsUi(value) {
+  const unit = getState().unit
+  if (unit === 'mm') return value * 72 / 25.4
+  if (unit === 'in') return value * 72
+  return value
 }
 
 init()

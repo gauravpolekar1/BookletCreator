@@ -162,3 +162,69 @@ select, input[type="text"], input[type="file"], textarea {
 
 .toast.error { border-left-color: var(--danger); }
 .toast.success { border-left-color: var(--success); }
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: white;
+  background: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.secondary {
+  color: var(--accent);
+  background: transparent;
+}
+
+.is-disabled {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+input[type="number"], input:not([type]), input[type="file"] {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--surface);
+}
+
+.report-box, .flipbook-container {
+  min-height: 10rem;
+  padding: var(--space-4);
+  border: 1px dashed var(--border);
+  border-radius: 1rem;
+  background: var(--surface-muted);
+  overflow: auto;
+}
+
+.flipbook-container canvas {
+  max-width: min(100%, 360px);
+  margin: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: var(--shadow);
+}
+
+#cover-canvas {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface-muted);
+}
+
+progress {
+  width: 100%;
+  min-height: 1rem;
+}
