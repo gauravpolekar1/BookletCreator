@@ -1,0 +1,31 @@
+{
+  "id": "worksheet-a4",
+  "name": "Worksheet A4",
+  "description": "Starter settings for worksheet a4 projects.",
+  "pageSize": {
+    "width": "210mm",
+    "height": "297mm"
+  },
+  "margins": {
+    "top": 42,
+    "right": 42,
+    "bottom": 42,
+    "left": 42,
+    "unit": "pt"
+  },
+  "defaultFonts": {
+    "body": "Helvetica",
+    "heading": "Helvetica-Bold"
+  },
+  "defaultStyles": {
+    "body": {
+      "fontSize": 11,
+      "lineHeight": 1.35
+    },
+    "heading": {
+      "fontSize": 20,
+      "bold": true
+    }
+  },
+  "sample": "worksheet-a4-sample.md"
+}

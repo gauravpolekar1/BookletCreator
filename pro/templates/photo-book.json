@@ -1,0 +1,31 @@
+{
+  "id": "photo-book",
+  "name": "Photo Book",
+  "description": "Starter settings for photo book projects.",
+  "pageSize": {
+    "width": "10in",
+    "height": "8in"
+  },
+  "margins": {
+    "top": 18,
+    "right": 18,
+    "bottom": 18,
+    "left": 18,
+    "unit": "pt"
+  },
+  "defaultFonts": {
+    "body": "Helvetica",
+    "heading": "Helvetica-Bold"
+  },
+  "defaultStyles": {
+    "body": {
+      "fontSize": 11,
+      "lineHeight": 1.35
+    },
+    "heading": {
+      "fontSize": 20,
+      "bold": true
+    }
+  },
+  "sample": "photo-book-sample.md"
+}

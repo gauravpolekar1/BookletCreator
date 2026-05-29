@@ -1,0 +1,31 @@
+{
+  "id": "childrens-square",
+  "name": "Children's Square",
+  "description": "Starter settings for children's square projects.",
+  "pageSize": {
+    "width": "8.5in",
+    "height": "8.5in"
+  },
+  "margins": {
+    "top": 36,
+    "right": 36,
+    "bottom": 36,
+    "left": 36,
+    "unit": "pt"
+  },
+  "defaultFonts": {
+    "body": "Helvetica",
+    "heading": "Helvetica-Bold"
+  },
+  "defaultStyles": {
+    "body": {
+      "fontSize": 11,
+      "lineHeight": 1.35
+    },
+    "heading": {
+      "fontSize": 20,
+      "bold": true
+    }
+  },
+  "sample": "childrens-square-sample.md"
+}
