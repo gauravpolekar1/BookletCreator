@@ -1,5 +1,12 @@
 const units = ['mm', 'in', 'pt']
 
+/**
+ * @typedef {Object} PagePlanEntry
+ * @property {'source' | 'blank'} kind Ordered source-page reference or generated blank page.
+ * @property {number} [sourceIndex] 0-based index into the source PDF when kind is 'source'.
+ * @property {number} [repeatGroupId] Repeat sequence identifier shared by entries produced from one Repeat ×N action.
+ */
+
 const defaultState = {
   version: '0.1.0',
   unit: 'mm',
@@ -13,6 +20,7 @@ const defaultState = {
     fonts: [],
     loadedAt: null
   },
+  pagePlan: [],
   project: {
     id: null,
     title: 'Untitled booklet',
@@ -70,6 +78,43 @@ export function subscribe(listener) {
  */
 export function hydrateState(snapshot) {
   return updateState(() => mergeState(defaultState, snapshot || {}))
+}
+
+/**
+ * Creates the default page plan for a source PDF: one source entry per page.
+ * @param {number} pageCount Number of pages in the source PDF.
+ * @returns {PagePlanEntry[]} Source-order page plan.
+ */
+export function createDefaultPagePlan(pageCount) {
+  return Array.from({ length: Math.max(0, Number(pageCount || 0)) }, (_, sourceIndex) => ({
+    kind: 'source',
+    sourceIndex
+  }))
+}
+
+/**
+ * Replaces the current page plan.
+ * @param {PagePlanEntry[]} pagePlan Next page plan entries.
+ * @returns {object} Updated state.
+ */
+export function setPagePlan(pagePlan) {
+  return updateState((draft) => {
+    draft.pagePlan = sanitizePagePlan(pagePlan, draft.pdf.pageCount)
+    draft.project.updatedAt = new Date().toISOString()
+    return draft
+  })
+}
+
+/**
+ * Restores the page plan to the uploaded source PDF order.
+ * @returns {object} Updated state.
+ */
+export function resetPagePlan() {
+  return updateState((draft) => {
+    draft.pagePlan = createDefaultPagePlan(draft.pdf.pageCount)
+    draft.project.updatedAt = new Date().toISOString()
+    return draft
+  })
 }
 
 /**
@@ -160,7 +205,29 @@ export function createSettingsSnapshot() {
 function normalizeState(next) {
   const merged = mergeState(defaultState, next)
   if (!units.includes(merged.unit)) merged.unit = 'mm'
+  merged.pagePlan = sanitizePagePlan(merged.pagePlan, merged.pdf.pageCount)
+  if (merged.pdf.pageCount && !merged.pagePlan.length) {
+    merged.pagePlan = createDefaultPagePlan(merged.pdf.pageCount)
+  }
   return merged
+}
+
+function sanitizePagePlan(pagePlan, pageCount = 0) {
+  if (!Array.isArray(pagePlan)) return []
+  const maxSourceIndex = Math.max(0, Number(pageCount || 0)) - 1
+  return pagePlan.reduce((entries, entry) => {
+    if (!entry || typeof entry !== 'object') return entries
+    if (entry.kind === 'blank') {
+      entries.push({ kind: 'blank' })
+      return entries
+    }
+    if (entry.kind === 'source' && Number.isInteger(entry.sourceIndex) && entry.sourceIndex >= 0 && entry.sourceIndex <= maxSourceIndex) {
+      const nextEntry = { kind: 'source', sourceIndex: entry.sourceIndex }
+      if (Number.isInteger(entry.repeatGroupId)) nextEntry.repeatGroupId = entry.repeatGroupId
+      entries.push(nextEntry)
+    }
+    return entries
+  }, [])
 }
 
 function mergeState(base, patch) {

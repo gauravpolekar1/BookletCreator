@@ -1,5 +1,6 @@
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs'
 import {
+  createDefaultPagePlan,
   createProjectExport,
   createSettingsSnapshot,
   fromPoints,
@@ -257,6 +258,7 @@ async function ingestPdf(file) {
         fonts: metadata.fonts,
         loadedAt: new Date().toISOString()
       }
+      draft.pagePlan = createDefaultPagePlan(pdfDocument.numPages)
       if (draft.project.title === 'Untitled booklet') {
         draft.project.title = file.name.replace(/\.pdf$/i, '')
       }
