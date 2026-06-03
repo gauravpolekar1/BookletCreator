@@ -1,7 +1,5 @@
 import { createDefaultPagePlan } from '../state.js'
 
-let nextRepeatGroupId = 1
-
 /**
  * Replaces one page-plan entry with N repeated source entries.
  * @param {import('../state.js').PagePlanEntry[]} pagePlan Current plan.
@@ -13,8 +11,7 @@ export function repeatEntry(pagePlan, index, count) {
   const entry = pagePlan[index]
   const copies = Math.max(1, Number(count || 1))
   if (!entry || entry.kind !== 'source') return pagePlan.slice()
-  const repeatGroupId = nextRepeatGroupId
-  nextRepeatGroupId += 1
+  const repeatGroupId = getNextRepeatGroupId(pagePlan)
   const plan = pagePlan.slice()
   plan.splice(index, 1, ...Array.from({ length: copies }, () => ({
     kind: 'source',
@@ -70,4 +67,10 @@ export function deleteEntry(pagePlan, index) {
  */
 export function restoreSourceOrder(pageCount) {
   return createDefaultPagePlan(pageCount)
+}
+
+function getNextRepeatGroupId(pagePlan) {
+  return pagePlan.reduce((nextId, entry) => (
+    Number.isInteger(entry?.repeatGroupId) ? Math.max(nextId, entry.repeatGroupId + 1) : nextId
+  ), 1)
 }

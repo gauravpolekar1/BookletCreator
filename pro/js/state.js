@@ -77,7 +77,7 @@ export function subscribe(listener) {
  * @returns {object} Updated state.
  */
 export function hydrateState(snapshot) {
-  return updateState(() => mergeState(defaultState, snapshot || {}))
+  return updateState(() => snapshot || {})
 }
 
 /**
@@ -203,12 +203,19 @@ export function createSettingsSnapshot() {
 }
 
 function normalizeState(next) {
+  const incomingPagePlan = next?.pagePlan
+  const hasPagePlanArray = Array.isArray(incomingPagePlan)
   const merged = mergeState(defaultState, next)
   if (!units.includes(merged.unit)) merged.unit = 'mm'
-  merged.pagePlan = sanitizePagePlan(merged.pagePlan, merged.pdf.pageCount)
-  if (merged.pdf.pageCount && !merged.pagePlan.length) {
+
+  if (hasPagePlanArray) {
+    merged.pagePlan = sanitizePagePlan(incomingPagePlan, merged.pdf.pageCount)
+  } else if (merged.pdf.pageCount) {
     merged.pagePlan = createDefaultPagePlan(merged.pdf.pageCount)
+  } else {
+    merged.pagePlan = []
   }
+
   return merged
 }
 
