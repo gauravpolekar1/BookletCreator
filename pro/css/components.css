@@ -228,3 +228,49 @@ progress {
   width: 100%;
   min-height: 1rem;
 }
+
+.section-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.section-heading-row h2,
+.section-heading-row p {
+  margin: 0;
+}
+
+.page-plan-list {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 28rem;
+  overflow: auto;
+  padding-right: var(--space-2);
+}
+
+.page-plan-row {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface-muted);
+}
+
+.page-plan-badge {
+  display: inline-flex;
+  margin-left: var(--space-2);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.page-plan-actions button {
+  min-height: 2rem;
+  padding: var(--space-1) var(--space-3);
+}

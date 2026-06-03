@@ -7,6 +7,7 @@ import {
   getState,
   hydrateState,
   importProjectPackage,
+  setPagePlan,
   setUnit,
   subscribe,
   updateState
@@ -28,6 +29,7 @@ import { insertToc } from './layout/toc.js'
 import { addWatermark } from './layout/watermark.js'
 import { initCoverDesigner, listCoverTemplates } from './cover-designer/designer.js'
 import { createFlipbook } from './preview/flipbook.js'
+import { deleteEntry, insertBlankAfter, moveEntry, repeatEntry, restoreSourceOrder } from './preview/page-manipulation.js'
 import { processBatch } from './workflow/batch.js'
 import { formatFileName } from './workflow/profiles.js'
 
@@ -71,6 +73,9 @@ function cacheElements() {
     dropZone: document.querySelector('#drop-zone'),
     pdfInput: document.querySelector('#pdf-input'),
     pdfDetails: document.querySelector('#pdf-details'),
+    pagePlanList: document.querySelector('#page-plan-list'),
+    pagePlanSummary: document.querySelector('#page-plan-summary'),
+    resetPagePlan: document.querySelector('#reset-page-plan'),
     projectTitle: document.querySelector('#project-title'),
     projectNotes: document.querySelector('#project-notes'),
     saveProject: document.querySelector('#save-project'),
@@ -196,6 +201,13 @@ function bindEvents() {
   elements.exportProject.addEventListener('click', () => void downloadProjectPackage())
   elements.projectImport.addEventListener('change', (event) => void importSelectedProject(event))
   elements.refreshProjects.addEventListener('click', () => void renderProjects())
+  elements.resetPagePlan.addEventListener('click', () => {
+    const state = getState()
+    invalidateGeneratedOutputs()
+    setPagePlan(restoreSourceOrder(state.pdf.pageCount))
+    showToast('Page plan restored to source order.', 'success')
+  })
+  elements.pagePlanList.addEventListener('click', handlePagePlanAction)
   elements.toggleInspector.addEventListener('click', toggleInspector)
   elements.runImposition.addEventListener('click', () => void runImposition())
   elements.downloadImposed.addEventListener('click', (event) => downloadGenerated(event, 'imposed'))
@@ -212,7 +224,7 @@ function bindEvents() {
   elements.downloadCover.addEventListener('click', (event) => downloadGenerated(event, 'cover'))
   elements.renderFlipbook.addEventListener('click', () => void renderFlipbookUi())
   elements.previewFullscreen.addEventListener('click', () => elements.flipbookContainer.requestFullscreen?.())
-  elements.downloadCurrent.addEventListener('click', downloadCurrentPdf)
+  elements.downloadCurrent.addEventListener('click', () => void downloadCurrentPdf())
   elements.runBatch.addEventListener('click', () => void runBatchUi())
 }
 
@@ -248,6 +260,7 @@ async function ingestPdf(file) {
     const pdfDocument = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise
     const metadata = await inspectPdf(pdfDocument)
 
+    invalidateGeneratedOutputs()
     updateState((draft) => {
       draft.pdf = {
         name: file.name,
@@ -418,6 +431,7 @@ function render(state) {
   elements.projectTitle.value = state.project.title || ''
   elements.projectNotes.value = state.project.notes || ''
   renderPdfDetails(state)
+  renderPagePlan(state)
   renderProjectInfo(state)
 }
 
@@ -436,6 +450,74 @@ function renderPdfDetails(state) {
     <div><dt>Page sizes</dt><dd>${escapeHtml(pageSizeSummary)}</dd></div>
     <div><dt>Embedded fonts / font usage</dt><dd>${escapeHtml(fonts)}</dd></div>
   `
+}
+
+
+function renderPagePlan(state) {
+  const sourceCount = state.pagePlan.filter((entry) => entry.kind === 'source').length
+  const blankCount = state.pagePlan.filter((entry) => entry.kind === 'blank').length
+  elements.pagePlanSummary.textContent = state.pdf.pageCount
+    ? `${state.pagePlan.length} printable entr${state.pagePlan.length === 1 ? 'y' : 'ies'} · ${sourceCount} source · ${blankCount} blank`
+    : 'Upload a PDF to create a page plan.'
+
+  if (!state.pdf.pageCount) {
+    elements.pagePlanList.innerHTML = '<p class="muted">No source PDF loaded yet.</p>'
+    elements.resetPagePlan.disabled = true
+    return
+  }
+
+  elements.resetPagePlan.disabled = false
+  if (!state.pagePlan.length) {
+    elements.pagePlanList.innerHTML = '<p class="muted">The page plan is intentionally empty. Use Restore source order to add pages back.</p>'
+    return
+  }
+
+  elements.pagePlanList.innerHTML = state.pagePlan.map((entry, index) => {
+    const title = entry.kind === 'blank' ? 'Blank page' : `Source page ${entry.sourceIndex + 1}`
+    const group = Number.isInteger(entry.repeatGroupId) ? `<span class="page-plan-badge">Repeat ${entry.repeatGroupId}</span>` : ''
+    const repeatButton = entry.kind === 'source'
+      ? `<button type="button" class="secondary" data-plan-action="repeat" data-index="${index}">Repeat ×2</button>`
+      : ''
+    return `
+      <article class="page-plan-row" data-index="${index}">
+        <div>
+          <strong>${index + 1}. ${escapeHtml(title)}</strong>
+          ${group}
+        </div>
+        <div class="button-row page-plan-actions">
+          <button type="button" class="secondary" data-plan-action="up" data-index="${index}" ${index === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="secondary" data-plan-action="down" data-index="${index}" ${index === state.pagePlan.length - 1 ? 'disabled' : ''}>↓</button>
+          ${repeatButton}
+          <button type="button" class="secondary" data-plan-action="blank" data-index="${index}">Add blank after</button>
+          <button type="button" class="danger" data-plan-action="delete" data-index="${index}">Delete</button>
+        </div>
+      </article>
+    `
+  }).join('')
+}
+
+function handlePagePlanAction(event) {
+  const button = event.target.closest('[data-plan-action]')
+  if (!button) return
+  const state = getState()
+  const index = Number(button.dataset.index)
+  const action = button.dataset.planAction
+  let nextPlan = state.pagePlan.slice()
+
+  if (action === 'repeat') nextPlan = repeatEntry(state.pagePlan, index, 2)
+  if (action === 'blank') nextPlan = insertBlankAfter(state.pagePlan, index)
+  if (action === 'delete') nextPlan = deleteEntry(state.pagePlan, index)
+  if (action === 'up') nextPlan = moveEntry(state.pagePlan, index, index - 1)
+  if (action === 'down') nextPlan = moveEntry(state.pagePlan, index, index + 1)
+
+  invalidateGeneratedOutputs()
+  setPagePlan(nextPlan)
+}
+
+function invalidateGeneratedOutputs() {
+  generated.imposed = null
+  generated.prepped = null
+  generated.layout = null
 }
 
 function renderProjectInfo(state) {
@@ -537,10 +619,40 @@ function sourceBytes() {
   return generated.layout || generated.prepped || generated.imposed || getState().pdf.bytes
 }
 
+async function currentPrintableBytes() {
+  if (generated.layout || generated.prepped || generated.imposed) return sourceBytes()
+  return createPlannedPdfBytes()
+}
+
+async function createPlannedPdfBytes() {
+  const state = getState()
+  if (!state.pdf.bytes || !state.pagePlan.length) return null
+  if (state.pagePlan.length === state.pdf.pageCount && state.pagePlan.every((entry, index) => entry.kind === 'source' && entry.sourceIndex === index)) {
+    return state.pdf.bytes
+  }
+
+  const { PDFDocument } = window.PDFLib
+  const source = await PDFDocument.load(state.pdf.bytes.slice(0))
+  const output = await PDFDocument.create()
+  const sourcePages = source.getPages()
+  const defaultSize = sourcePages[0]?.getSize?.() || { width: 612, height: 792 }
+
+  for (const entry of state.pagePlan) {
+    if (entry.kind === 'blank') {
+      output.addPage([defaultSize.width, defaultSize.height])
+      continue
+    }
+    const [copiedPage] = await output.copyPages(source, [entry.sourceIndex])
+    output.addPage(copiedPage)
+  }
+
+  return output.save()
+}
+
 async function runImposition() {
-  const bytes = getState().pdf.bytes
+  const bytes = await createPlannedPdfBytes()
   if (!bytes) {
-    showToast('Upload a PDF before running imposition.', 'error')
+    showToast(getState().pdf.bytes ? 'The page plan has no printable pages.' : 'Upload a PDF before running imposition.', 'error')
     return
   }
   try {
@@ -573,7 +685,7 @@ async function runImposition() {
 }
 
 async function applyPrintPreparation() {
-  const bytes = sourceBytes()
+  const bytes = await currentPrintableBytes()
   if (!bytes) {
     showToast('Upload or generate a PDF before print prep.', 'error')
     return
@@ -618,7 +730,7 @@ async function downloadPreflightReport() {
 }
 
 async function applyLayoutUi() {
-  const bytes = sourceBytes()
+  const bytes = await currentPrintableBytes()
   if (!bytes) {
     showToast('Upload or generate a PDF before layout finishing.', 'error')
     return
@@ -677,9 +789,9 @@ async function exportCoverPdf() {
 }
 
 async function renderFlipbookUi() {
-  const bytes = sourceBytes()
+  const bytes = await currentPrintableBytes()
   if (!bytes) {
-    showToast('Upload or generate a PDF before previewing.', 'error')
+    showToast(getState().pdf.bytes ? 'The page plan has no printable pages to preview.' : 'Upload or generate a PDF before previewing.', 'error')
     return
   }
   try {
@@ -692,8 +804,8 @@ async function renderFlipbookUi() {
   }
 }
 
-function downloadCurrentPdf() {
-  const bytes = sourceBytes()
+async function downloadCurrentPdf() {
+  const bytes = await currentPrintableBytes()
   if (!bytes) {
     showToast('Nothing to export yet.', 'error')
     return
