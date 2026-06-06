@@ -28,7 +28,7 @@ import { applyGutter } from './layout/gutter.js'
 import { insertToc } from './layout/toc.js'
 import { addWatermark } from './layout/watermark.js'
 import { initCoverDesigner, listCoverTemplates } from './cover-designer/designer.js'
-import { createFlipbook } from './preview/flipbook.js'
+import { renderPreviewPages } from './preview/flipbook.js'
 import { deleteEntry, insertBlankAfter, moveEntry, repeatEntry, restoreSourceOrder } from './preview/page-manipulation.js'
 import { processBatch } from './workflow/batch.js'
 import { formatFileName } from './workflow/profiles.js'
@@ -85,7 +85,7 @@ function cacheElements() {
     refreshProjects: document.querySelector('#refresh-projects'),
     projectList: document.querySelector('#project-list'),
     projectInfo: document.querySelector('#project-info'),
-    previewCanvas: document.querySelector('#preview-canvas'),
+    previewContainer: document.querySelector('#preview-container'),
     previewStatus: document.querySelector('#preview-status'),
     toggleInspector: document.querySelector('#toggle-inspector'),
     inspector: document.querySelector('.inspector'),
@@ -279,7 +279,7 @@ async function ingestPdf(file) {
       return draft
     })
 
-    await renderFirstPage(pdfDocument)
+    await renderLivePreview()
     showToast(`Loaded ${file.name} (${pdfDocument.numPages} pages).`, 'success')
   } catch (error) {
     handleError('Could not load that PDF. Try a different file.', error)
@@ -307,17 +307,23 @@ async function inspectPdf(pdfDocument) {
   return { pageSizes, fonts: [...fonts].sort() }
 }
 
-async function renderFirstPage(pdfDocument) {
-  const page = await pdfDocument.getPage(1)
-  const canvas = elements.previewCanvas
-  const context = canvas.getContext('2d')
-  const baseViewport = page.getViewport({ scale: 1 })
-  const scale = Math.min(canvas.width / baseViewport.width, canvas.height / baseViewport.height)
-  const viewport = page.getViewport({ scale })
-  canvas.width = Math.max(1, Math.floor(viewport.width))
-  canvas.height = Math.max(1, Math.floor(viewport.height))
-  await page.render({ canvasContext: context, viewport }).promise
-  elements.previewStatus.textContent = 'Showing page 1 preview.'
+async function renderLivePreview() {
+  const bytes = await currentPrintableBytes()
+  if (!bytes) {
+    elements.previewContainer.textContent = ''
+    elements.previewStatus.textContent = 'Upload a PDF to render the print preview.'
+    return
+  }
+
+  try {
+    elements.previewStatus.textContent = 'Rendering live preview…'
+    const document = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise
+    await renderPreviewPages(elements.previewContainer, document)
+    elements.previewStatus.textContent = 'Showing live preview.'
+  } catch (error) {
+    elements.previewStatus.textContent = 'Preview unavailable.'
+    console.error(error)
+  }
 }
 
 function updateProjectField(field, value) {
@@ -359,8 +365,7 @@ async function importSelectedProject(event) {
     await importProjectPackage(packageData)
     const state = getState()
     if (state.pdf.bytes) {
-      const pdfDocument = await pdfjsLib.getDocument({ data: state.pdf.bytes.slice(0) }).promise
-      await renderFirstPage(pdfDocument)
+      await renderLivePreview()
     }
     showToast('Project imported. Re-upload the PDF if it was not embedded.', 'success')
   } catch (error) {
@@ -512,6 +517,7 @@ function handlePagePlanAction(event) {
 
   invalidateGeneratedOutputs()
   setPagePlan(nextPlan)
+  void renderLivePreview()
 }
 
 function invalidateGeneratedOutputs() {
@@ -677,6 +683,7 @@ async function runImposition() {
     })
     enableDownload(elements.downloadImposed, 'booklet-imposed.pdf')
     elements.impositionStatus.textContent = `Generated ${formatBytes(generated.imposed.length)} imposed PDF.`
+    await renderLivePreview()
     showToast('Imposition complete.', 'success')
   } catch (error) {
     handleError('Could not impose this PDF.', error)
@@ -699,6 +706,7 @@ async function applyPrintPreparation() {
     }
     generated.prepped = output
     enableDownload(elements.downloadPrepped, 'booklet-print-prep.pdf')
+    await renderLivePreview()
     showToast('Print prep complete.', 'success')
   } catch (error) {
     handleError('Could not apply print prep.', error)
@@ -746,6 +754,7 @@ async function applyLayoutUi() {
     generated.layout = output
     enableDownload(elements.downloadLayout, 'booklet-layout.pdf')
     elements.layoutStatus.textContent = `Generated ${formatBytes(output.length)} layout PDF.`
+    await renderLivePreview()
     showToast('Layout finishing complete.', 'success')
   } catch (error) {
     handleError('Could not apply layout features.', error)
@@ -795,12 +804,12 @@ async function renderFlipbookUi() {
     return
   }
   try {
-    elements.flipbookContainer.textContent = 'Rendering pages…'
+    elements.flipbookContainer.textContent = 'Rendering print preview…'
     const document = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise
-    await createFlipbook(elements.flipbookContainer, document)
-    showToast('Flipbook preview rendered.', 'success')
+    await renderPreviewPages(elements.flipbookContainer, document)
+    showToast('Print preview rendered.', 'success')
   } catch (error) {
-    handleError('Could not render flipbook preview.', error)
+    handleError('Could not render print preview.', error)
   }
 }
 

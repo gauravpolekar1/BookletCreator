@@ -197,22 +197,43 @@ input[type="number"], input:not([type]), input[type="file"] {
   background: var(--surface);
 }
 
-.report-box, .flipbook-container {
+.report-box, .flipbook-container, .preview-container {
   min-height: 10rem;
+  height: min(60vh, 45rem);
   padding: var(--space-4);
   border: 1px dashed var(--border);
   border-radius: 1rem;
   background: var(--surface-muted);
-  overflow: auto;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
 }
 
-.flipbook-container canvas {
-  max-width: min(100%, 360px);
-  margin: var(--space-3);
+.preview-page {
+  display: grid;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  scroll-snap-align: start;
+  min-height: 100%;
+}
+
+.preview-page-label {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.flipbook-container canvas,
+.preview-container canvas {
+  display: block;
+  width: 100%;
+  height: auto;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   background: white;
   box-shadow: var(--shadow);
+}
+
+.preview-container {
+  overscroll-behavior: contain;
 }
 
 #cover-canvas {

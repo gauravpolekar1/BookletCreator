@@ -1,26 +1,38 @@
 /**
- * Renders PDF pages to canvases and loads them into StPageFlip when available.
- * @param {HTMLElement} container Flipbook container.
+ * Renders PDF pages as browser canvases in a scrollable print preview.
+ * @param {HTMLElement} container Preview container.
  * @param {object} pdfDocument Loaded pdf.js document.
  * @returns {Promise<object>} Preview controller.
  */
-export async function createFlipbook(container, pdfDocument) {
+export async function renderPreviewPages(container, pdfDocument) {
   container.innerHTML = ''
   const canvases = []
+
   for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
     const page = await pdfDocument.getPage(pageNumber)
-    const viewport = page.getViewport({ scale: 0.8 })
+    const baseViewport = page.getViewport({ scale: 1 })
+    const scale = Math.min(1, Math.max(container.clientWidth, 640) / baseViewport.width)
+    const viewport = page.getViewport({ scale })
+
+    const pageWrapper = document.createElement('div')
+    pageWrapper.className = 'preview-page'
+
+    const pageLabel = document.createElement('div')
+    pageLabel.className = 'preview-page-label'
+    pageLabel.textContent = `Page ${pageNumber} of ${pdfDocument.numPages}`
+
     const canvas = document.createElement('canvas')
-    canvas.width = viewport.width
-    canvas.height = viewport.height
+    canvas.width = Math.max(1, Math.floor(viewport.width))
+    canvas.height = Math.max(1, Math.floor(viewport.height))
+    canvas.style.width = '100%'
+    canvas.style.height = 'auto'
+
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
-    container.append(canvas)
+
+    pageWrapper.append(pageLabel, canvas)
+    container.append(pageWrapper)
     canvases.push(canvas)
   }
-  if (window.St?.PageFlip) {
-    const pageFlip = new window.St.PageFlip(container, { width: canvases[0]?.width || 320, height: canvases[0]?.height || 420, showCover: true })
-    pageFlip.loadFromHTML(canvases)
-    return pageFlip
-  }
+
   return { canvases }
 }
