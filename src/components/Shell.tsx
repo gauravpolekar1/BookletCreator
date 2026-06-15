@@ -1,7 +1,10 @@
 import { ToolId } from '../types/booklet';
 
 const tools: { id: ToolId; label: string }[] = [
-  { id: 'booklet', label: 'Booklet Creator' }
+  { id: 'booklet', label: 'Booklet Creator' },
+  { id: 'split', label: 'PDF Split' },
+  { id: 'merge', label: 'PDF Merge' },
+  { id: 'resize', label: 'PDF Resize' }
 ];
 
 export const Shell = ({ active, onSelect, children }: { active: ToolId; onSelect: (tool: ToolId) => void; children: React.ReactNode }) => (
