@@ -46,4 +46,7 @@ export interface SheetSpread {
 }
 
 export type ToolId =
-  | 'booklet';
+  | 'booklet'
+  | 'split'
+  | 'merge'
+  | 'resize';

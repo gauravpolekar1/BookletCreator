@@ -33,7 +33,7 @@ export const PdfPreview = ({
         setSelectedPage(null);
         return;
       }
-      const data = bytes ?? new Uint8Array(await file!.arrayBuffer());
+      const data = bytes ? bytes.slice() : new Uint8Array(await file!.arrayBuffer());
       const doc = await pdfjsLib.getDocument({ data }).promise;
       const totalPages = showAllPages ? doc.numPages : 1;
       const renderedImages: string[] = [];
